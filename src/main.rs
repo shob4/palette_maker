@@ -7,10 +7,11 @@
 //  [] square
 //  [] triadic
 // [] translate color types
-//  [] rgb to hex
-//  [] hsl to hex
-//  [] name to hex?
-//  [] hsb to hex
+//  [] to rgb
+//  [] to hsl
+//  [] to name
+//  [] to hsb
+//  [] to hex
 fn main() {
     println!("Hello, world!");
 }
