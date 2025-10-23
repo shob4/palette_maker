@@ -42,7 +42,12 @@ impl Encoding {
             }
             Encoding::Name(_) => Encoding::Rgb(0, 0, 0),
             Encoding::Hsb(r, g, b) => Encoding::Rgb(r, g, b),
-            Encoding::Hex(_) => Encoding::Rgb(0, 0, 0),
+            Encoding::Hex(h) => {
+                let r = (h % 0x00ffff / 0xffff) as i32;
+                let g = (h % 0xff0000 / 0xff) as i32;
+                let b = (h % 0xffff00) as i32;
+                Encoding::Rgb(r, g, b)
+            }
         }
     }
 }
