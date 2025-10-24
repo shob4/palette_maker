@@ -2,7 +2,7 @@ pub enum Encoding {
     Rgb(i32, i32, i32),
     Hsl(f32, f32, f32),
     Name(String),
-    Hsb(i32, i32, i32),
+    Hsb(f32, f32, f32),
     Hex(i128),
 }
 
@@ -41,7 +41,31 @@ impl Encoding {
                 Encoding::Rgb(r, g, b)
             }
             Encoding::Name(_) => Encoding::Rgb(0, 0, 0),
-            Encoding::Hsb(r, g, b) => Encoding::Rgb(r, g, b),
+            Encoding::Hsb(h, s, b) => {
+                let (mut red, mut green, mut blue): (i32, i32, i32);
+                let c = b * s;
+                let x = c * (1.0 - ((h / 60.0) % 2.0 - 1.0).abs());
+                let m = b - c;
+
+                let c = c as i32;
+                let x = x as i32;
+                if h < 60.0 {
+                    (red, green, blue) = (c, x, 0 as i32);
+                } else if h < 120.0 {
+                    (red, green, blue) = (x, c, 0 as i32);
+                } else if h < 180.0 {
+                    (red, green, blue) = (0 as i32, c, x);
+                } else if h < 240.0 {
+                    (red, green, blue) = (0 as i32, x, c);
+                } else if h < 300.0 {
+                    (red, green, blue) = (x, 0 as i32, c);
+                } else if h < 360.0 {
+                    (red, green, blue) = (c, 0 as i32, x);
+                } else {
+                    panic!("h out of bounds");
+                }
+                Encoding::Rgb(red, green, blue)
+            }
             Encoding::Hex(h) => {
                 let r = (h % 0x00ffff / 0xffff) as i32;
                 let g = (h % 0xff0000 / 0xff) as i32;
