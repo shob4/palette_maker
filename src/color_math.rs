@@ -64,6 +64,11 @@ impl Encoding {
                 } else {
                     panic!("h out of bounds");
                 }
+                (red, green, blue) = (
+                    (red + m as i32) * 255,
+                    (green + m as i32) * 255,
+                    (blue + m as i32) * 255,
+                );
                 Encoding::Rgb(red, green, blue)
             }
             Encoding::Hex(h) => {
@@ -74,6 +79,11 @@ impl Encoding {
             }
         }
     }
+
+    fn rgb_to_hsl(&self) {}
+    fn rgb_to_hsb(&self) {}
+    fn rgb_to_hex(&self) {}
+    fn rgb_to_name(&self) {}
 }
 
 pub fn complement() {}
