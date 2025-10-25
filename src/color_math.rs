@@ -1,8 +1,10 @@
+use std::cmp::{max, min};
+
 pub enum Encoding {
     Rgb(i32, i32, i32),
     Hsl(f32, f32, f32),
     Name(String),
-    Hsb(f32, f32, f32),
+    Hsb { h: f32, s: f32, b: f32 },
     Hex(i128),
 }
 
@@ -81,7 +83,42 @@ impl Encoding {
     }
 
     fn rgb_to_hsl(&self) {}
-    fn rgb_to_hsb(&self) {}
+    fn rgb_to_hsb(&self) -> Result<(f32, f32, f32), String> {
+        match *self {
+            Encoding::Rgb(r, g, b) => {
+                let red = r / 255;
+                let green = g / 255;
+                let blue = b / 255;
+                let bigger = max(red, blue);
+                let smaller = min(red, blue);
+                let c_max = max(bigger, green);
+                let c_min = min(smaller, green);
+                let delta = c_max as f32 - c_min as f32;
+                let red = red as f32;
+                let green = green as f32;
+                let blue = blue as f32;
+                let h = if (c_max as f32) == red {
+                    60.0 * ((green - blue) / delta % 6.0)
+                } else if (c_max as f32) == green {
+                    60.0 * ((blue - red) / delta + 2.0)
+                } else if (c_max as f32) == blue {
+                    60.0 * ((red - green) / delta + 4.0)
+                } else {
+                    0.0
+                };
+
+                let s = if c_max == 0 {
+                    0.0
+                } else {
+                    delta / (c_max as f32)
+                };
+                let b = c_max as f32;
+                return Ok((h, s, b));
+            }
+            // TODO change to error type
+            _ => return Err("Incorrect Encoding type".to_string()),
+        }
+    }
     fn rgb_to_hex(&self) {}
     fn rgb_to_name(&self) {}
 }

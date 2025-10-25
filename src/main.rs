@@ -7,11 +7,13 @@
 //  [] square
 //  [] triadic
 // [] translate color types
-//  [] to rgb
+//  [x] to rgb
 //  [] to hsl
 //  [] to name
-//  [] to hsb
+//  [x] rgb to hsb
 //  [] to hex
+// [] create error types
+//  [] wrong encoding
 fn main() {
     println!("Hello, world!");
 }
