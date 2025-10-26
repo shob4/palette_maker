@@ -11,29 +11,18 @@ pub enum Encoding {
 
 impl PartialEq for Encoding {
     fn eq(&self, other: &Self) -> bool {
-        match *self {
-            Encoding::Rgb(r, g, b) => match *other {
-                Encoding::Rgb(red, green, blue) => r == red && g == green && b == blue,
-                _ => false,
-            },
-            Encoding::Hsl(h, s, l) => match *other {
-                Encoding::Hsl(hue, saturation, light) => h == hue && s == saturation && l == light,
-                _ => false,
-            },
-            Encoding::Name(n) => match *other {
-                Encoding::Name(name) => n == name,
-                _ => false,
-            },
-            Encoding::Hsb(h, s, b) => match *other {
-                Encoding::Hsb(hue, saturation, brightness) => {
-                    h == hue && s == saturation && b == brightness
-                }
-                _ => false,
-            },
-            Encoding::Hex(h) => match *other {
-                Encoding::Hex(hex) => h == hex,
-                _ => false,
-            },
+        match (self, other) {
+            (Encoding::Rgb(r1, g1, b1), Encoding::Rgb(r2, g2, b2)) => {
+                r1 == r2 && g1 == g2 && b1 == b2
+            }
+            (Encoding::Hsl(h1, s1, l1), Encoding::Hsl(h2, s2, l2)) => {
+                h1 == h2 && s1 == s2 && l1 == l2
+            }
+            (Encoding::Name(n1), Encoding::Name(n2)) => n1 == n2,
+            (Encoding::Hsb(h1, s1, b1), Encoding::Hsb(h2, s2, b2)) => {
+                h1 == h2 && s1 == s2 && b1 == b2
+            }
+            (Encoding::Hex(h1), Encoding::Hex(h2)) => h1 == h2,
             _ => false,
         }
     }
@@ -41,8 +30,8 @@ impl PartialEq for Encoding {
 
 impl Encoding {
     fn translate_to_rgb(&self) -> Encoding {
-        match *self {
-            Encoding::Rgb(r, g, b) => Encoding::Rgb(r, g, b),
+        match self {
+            Encoding::Rgb(r, g, b) => Encoding::Rgb(*r, *g, *b),
             Encoding::Hsl(h, s, l) => {
                 let (mut r, mut g, mut b): (i32, i32, i32);
                 let c = (1.0 - (2.0 * l - 1.0).abs()) * s;
@@ -51,17 +40,17 @@ impl Encoding {
 
                 let c = c as i32;
                 let x = x as i32;
-                if h < 60.0 {
+                if *h < 60.0 {
                     (r, g, b) = (c, x, 0 as i32);
-                } else if h < 120.0 {
+                } else if *h < 120.0 {
                     (r, g, b) = (x, c, 0 as i32);
-                } else if h < 180.0 {
+                } else if *h < 180.0 {
                     (r, g, b) = (0 as i32, c, x);
-                } else if h < 240.0 {
+                } else if *h < 240.0 {
                     (r, g, b) = (0 as i32, x, c);
-                } else if h < 300.0 {
+                } else if *h < 300.0 {
                     (r, g, b) = (x, 0 as i32, c);
-                } else if h < 360.0 {
+                } else if *h < 360.0 {
                     (r, g, b) = (c, 0 as i32, x);
                 } else {
                     panic!("h out of bounds");
@@ -82,17 +71,17 @@ impl Encoding {
 
                 let c = c as i32;
                 let x = x as i32;
-                if h < 60.0 {
+                if *h < 60.0 {
                     (red, green, blue) = (c, x, 0 as i32);
-                } else if h < 120.0 {
+                } else if *h < 120.0 {
                     (red, green, blue) = (x, c, 0 as i32);
-                } else if h < 180.0 {
+                } else if *h < 180.0 {
                     (red, green, blue) = (0 as i32, c, x);
-                } else if h < 240.0 {
+                } else if *h < 240.0 {
                     (red, green, blue) = (0 as i32, x, c);
-                } else if h < 300.0 {
+                } else if *h < 300.0 {
                     (red, green, blue) = (x, 0 as i32, c);
-                } else if h < 360.0 {
+                } else if *h < 360.0 {
                     (red, green, blue) = (c, 0 as i32, x);
                 } else {
                     panic!("h out of bounds");
@@ -115,7 +104,7 @@ impl Encoding {
 
     fn rgb_to_hsl(&self) {}
     fn rgb_to_hsb(&self) -> Result<(f32, f32, f32), String> {
-        match *self {
+        match self {
             Encoding::Rgb(r, g, b) => {
                 let red = r / 255;
                 let green = g / 255;
