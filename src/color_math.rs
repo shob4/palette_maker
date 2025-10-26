@@ -1,11 +1,42 @@
 use std::cmp::{max, min};
 
+#[derive(Debug)]
 pub enum Encoding {
     Rgb(i32, i32, i32),
     Hsl(f32, f32, f32),
     Name(String),
-    Hsb { h: f32, s: f32, b: f32 },
+    Hsb(f32, f32, f32),
     Hex(i128),
+}
+
+impl PartialEq for Encoding {
+    fn eq(&self, other: &Self) -> bool {
+        match *self {
+            Encoding::Rgb(r, g, b) => match *other {
+                Encoding::Rgb(red, green, blue) => r == red && g == green && b == blue,
+                _ => false,
+            },
+            Encoding::Hsl(h, s, l) => match *other {
+                Encoding::Hsl(hue, saturation, light) => h == hue && s == saturation && l == light,
+                _ => false,
+            },
+            Encoding::Name(n) => match *other {
+                Encoding::Name(name) => n == name,
+                _ => false,
+            },
+            Encoding::Hsb(h, s, b) => match *other {
+                Encoding::Hsb(hue, saturation, brightness) => {
+                    h == hue && s == saturation && b == brightness
+                }
+                _ => false,
+            },
+            Encoding::Hex(h) => match *other {
+                Encoding::Hex(hex) => h == hex,
+                _ => false,
+            },
+            _ => false,
+        }
+    }
 }
 
 impl Encoding {
@@ -128,3 +159,14 @@ pub fn triad() {}
 pub fn square() {}
 pub fn analogous() {}
 pub fn monochromatic() {}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn hex_to_rgb() {
+        let test = Encoding::Hex(0xf54927);
+        let result = test.translate_to_rgb();
+        assert_eq!(result, test);
+    }
+}
