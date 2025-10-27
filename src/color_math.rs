@@ -153,9 +153,31 @@ pub fn monochromatic() {}
 mod tests {
     use super::*;
 
+    #[test]
+    fn rgb_to_rgb() {
+        let test = Encoding::Rgb(245, 73, 39);
+        let result = test.translate_to_rgb();
+        assert_eq!(result, Encoding::Rgb(245, 73, 39));
+    }
+
+    #[test]
     fn hex_to_rgb() {
         let test = Encoding::Hex(0xf54927);
         let result = test.translate_to_rgb();
-        assert_eq!(result, test);
+        assert_eq!(result, Encoding::Rgb(245, 73, 39));
+    }
+
+    #[test]
+    fn hsl_to_rgb() {
+        let test = Encoding::Hsl(10.0, 91.0, 56.0);
+        let result = test.translate_to_rgb();
+        assert_eq!(result, Encoding::Rgb(245, 73, 39));
+    }
+
+    #[test]
+    fn hsb_to_rgb() {
+        let test = Encoding::Hsb(10.0, 84.1, 96.1);
+        let result = test.translate_to_rgb();
+        assert_eq!(result, Encoding::Rgb(245, 73, 39));
     }
 }
