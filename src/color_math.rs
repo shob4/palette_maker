@@ -33,63 +33,83 @@ impl Encoding {
         match self {
             Encoding::Rgb(r, g, b) => Encoding::Rgb(*r, *g, *b),
             Encoding::Hsl(h, s, l) => {
-                let (mut r, mut g, mut b): (i32, i32, i32);
+                if *h < 0.0 || *h > 360.0 {
+                    panic!("h not a degree");
+                }
+                if *s < 0.0 || *s > 1.0 {
+                    panic!("s not a percentage")
+                }
+                if *l < 0.0 || *l > 1.0 {
+                    panic!("l not a percentage")
+                }
+                let (r, g, b): (f32, f32, f32);
                 let c = (1.0 - (2.0 * l - 1.0).abs()) * s;
+                println!("{c}");
                 let x = c * (1.0 - ((h / 60.0) % 2.0 - 1.0).abs());
+                println!("{x}");
                 let m = l - c / 2.0;
+                println!("{m}");
 
-                let c = c as i32;
-                let x = x as i32;
                 if *h < 60.0 {
-                    (r, g, b) = (c, x, 0 as i32);
+                    (r, g, b) = (c, x, 0.0);
                 } else if *h < 120.0 {
-                    (r, g, b) = (x, c, 0 as i32);
+                    (r, g, b) = (x, c, 0.0);
                 } else if *h < 180.0 {
-                    (r, g, b) = (0 as i32, c, x);
+                    (r, g, b) = (0.0, c, x);
                 } else if *h < 240.0 {
-                    (r, g, b) = (0 as i32, x, c);
+                    (r, g, b) = (0.0, x, c);
                 } else if *h < 300.0 {
-                    (r, g, b) = (x, 0 as i32, c);
+                    (r, g, b) = (x, 0.0, c);
                 } else if *h < 360.0 {
-                    (r, g, b) = (c, 0 as i32, x);
+                    (r, g, b) = (c, 0.0, x);
                 } else {
                     panic!("h out of bounds");
                 }
-                (r, g, b) = (
-                    (r + m as i32) * 255,
-                    (g + m as i32) * 255,
-                    (b + m as i32) * 255,
+                let (r, g, b) = (
+                    ((r + m) * 255.0) as i32,
+                    ((g + m) * 255.0) as i32,
+                    ((b + m) * 255.0) as i32,
                 );
+                println!("r: {r}");
+                println!("g: {g}");
+                println!("b: {b}");
                 Encoding::Rgb(r, g, b)
             }
             Encoding::Name(_) => Encoding::Rgb(0, 0, 0),
             Encoding::Hsb(h, s, b) => {
-                let (mut red, mut green, mut blue): (i32, i32, i32);
+                if *h < 0.0 || *h > 360.0 {
+                    panic!("h not a degree");
+                }
+                if *s < 0.0 || *s > 1.0 {
+                    panic!("s not a percentage")
+                }
+                if *b < 0.0 || *b > 1.0 {
+                    panic!("b not a percentage")
+                }
+                let (red, green, blue): (f32, f32, f32);
                 let c = b * s;
                 let x = c * (1.0 - ((h / 60.0) % 2.0 - 1.0).abs());
                 let m = b - c;
 
-                let c = c as i32;
-                let x = x as i32;
                 if *h < 60.0 {
-                    (red, green, blue) = (c, x, 0 as i32);
+                    (red, green, blue) = (c, x, 0.0);
                 } else if *h < 120.0 {
-                    (red, green, blue) = (x, c, 0 as i32);
+                    (red, green, blue) = (x, c, 0.0);
                 } else if *h < 180.0 {
-                    (red, green, blue) = (0 as i32, c, x);
+                    (red, green, blue) = (0.0, c, x);
                 } else if *h < 240.0 {
-                    (red, green, blue) = (0 as i32, x, c);
+                    (red, green, blue) = (0.0, x, c);
                 } else if *h < 300.0 {
-                    (red, green, blue) = (x, 0 as i32, c);
+                    (red, green, blue) = (x, 0.0, c);
                 } else if *h < 360.0 {
-                    (red, green, blue) = (c, 0 as i32, x);
+                    (red, green, blue) = (c, 0.0, x);
                 } else {
                     panic!("h out of bounds");
                 }
-                (red, green, blue) = (
-                    (red + m as i32) * 255,
-                    (green + m as i32) * 255,
-                    (blue + m as i32) * 255,
+                let (red, green, blue) = (
+                    ((red + m) * 255.0) as i32,
+                    ((green + m) * 255.0) as i32,
+                    ((blue + m) * 255.0) as i32,
                 );
                 Encoding::Rgb(red, green, blue)
             }
@@ -169,14 +189,15 @@ mod tests {
 
     #[test]
     fn hsl_to_rgb() {
-        let test = Encoding::Hsl(10.0, 91.0, 56.0);
+        let test = Encoding::Hsl(10.0, 0.91, 0.56);
+        println!("h: 10.0, s: 0.91, l: 0.56");
         let result = test.translate_to_rgb();
         assert_eq!(result, Encoding::Rgb(245, 73, 39));
     }
 
     #[test]
     fn hsb_to_rgb() {
-        let test = Encoding::Hsb(10.0, 84.1, 96.1);
+        let test = Encoding::Hsb(10.0, 0.841, 0.961);
         let result = test.translate_to_rgb();
         assert_eq!(result, Encoding::Rgb(245, 73, 39));
     }
