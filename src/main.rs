@@ -8,10 +8,11 @@
 //  [] triadic
 // [] translate color types
 //  [x] to rgb
-//  [] to hsl
-//  [] to name
+//   [] figure out ints as percentages for hsl and hsb
+//  [x] rgb to hsl
+//  [] rgb to name
 //  [x] rgb to hsb
-//  [] to hex
+//  [] rgb to hex
 // [] create error types
 //  [] wrong encoding
 fn main() {

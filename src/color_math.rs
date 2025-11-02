@@ -2,11 +2,11 @@ use std::cmp::{max, min};
 
 #[derive(Debug)]
 pub enum Encoding {
-    Rgb(i32, i32, i32),
-    Hsl(f32, f32, f32),
+    Rgb(u8, u8, u8),
+    Hsl(u16, u16, u16),
     Name(String),
-    Hsb(f32, f32, f32),
-    Hex(i128),
+    Hsb(u16, u16, u16),
+    Hex(i32),
 }
 
 impl PartialEq for Encoding {
@@ -33,90 +33,69 @@ impl Encoding {
         match self {
             Encoding::Rgb(r, g, b) => Encoding::Rgb(*r, *g, *b),
             Encoding::Hsl(h, s, l) => {
-                if *h < 0.0 || *h > 360.0 {
-                    panic!("h not a degree");
-                }
-                if *s < 0.0 || *s > 1.0 {
-                    panic!("s not a percentage")
-                }
-                if *l < 0.0 || *l > 1.0 {
-                    panic!("l not a percentage")
-                }
-                let (r, g, b): (f32, f32, f32);
-                let c = (1.0 - (2.0 * l - 1.0).abs()) * s;
-                println!("{c}");
-                let x = c * (1.0 - ((h / 60.0) % 2.0 - 1.0).abs());
-                println!("{x}");
-                let m = l - c / 2.0;
-                println!("{m}");
+                assert!(*h < 360);
+                assert!(*s < 1000);
+                assert!(*l < 1000);
 
-                if *h < 60.0 {
-                    (r, g, b) = (c, x, 0.0);
-                } else if *h < 120.0 {
-                    (r, g, b) = (x, c, 0.0);
-                } else if *h < 180.0 {
-                    (r, g, b) = (0.0, c, x);
-                } else if *h < 240.0 {
-                    (r, g, b) = (0.0, x, c);
-                } else if *h < 300.0 {
-                    (r, g, b) = (x, 0.0, c);
-                } else if *h < 360.0 {
-                    (r, g, b) = (c, 0.0, x);
-                } else {
-                    panic!("h out of bounds");
-                }
+                let region = *h / 60;
+                let h = *h as f32;
+                let s = *s as f32 / 1000.0;
+                let l = *l as f32 / 1000.0;
+
+                let c = (1.0 - (2.0 * l - 1.0).abs()) * s;
+                let x = c * (1.0 - ((h / 60.0) % 2.0 - 1.0).abs());
+                let m = l - c / 2.0;
+
+                let (r, g, b) = match region {
+                    0 => (c, x, 0.0),
+                    1 => (x, c, 0.0),
+                    2 => (0.0, c, x),
+                    3 => (0.0, x, c),
+                    4 => (x, 0.0, c),
+                    _ => (c, 0.0, x),
+                };
                 let (r, g, b) = (
-                    ((r + m) * 255.0) as i32,
-                    ((g + m) * 255.0) as i32,
-                    ((b + m) * 255.0) as i32,
+                    ((r + m) * 255.0).round() as u8,
+                    ((g + m) * 255.0).round() as u8,
+                    ((b + m) * 255.0).round() as u8,
                 );
-                println!("r: {r}");
-                println!("g: {g}");
-                println!("b: {b}");
                 Encoding::Rgb(r, g, b)
             }
             Encoding::Name(_) => Encoding::Rgb(0, 0, 0),
             Encoding::Hsb(h, s, b) => {
-                if *h < 0.0 || *h > 360.0 {
-                    panic!("h not a degree");
-                }
-                if *s < 0.0 || *s > 1.0 {
-                    panic!("s not a percentage")
-                }
-                if *b < 0.0 || *b > 1.0 {
-                    panic!("b not a percentage")
-                }
-                let (red, green, blue): (f32, f32, f32);
+                assert!(*h <= 360);
+                assert!(*s <= 1000);
+                assert!(*b <= 1000);
+
+                let region = h / 60;
+                let h = *h as f32;
+                let s = *s as f32 / 1000.0;
+                let b = *b as f32 / 1000.0;
+
                 let c = b * s;
                 let x = c * (1.0 - ((h / 60.0) % 2.0 - 1.0).abs());
                 let m = b - c;
 
-                if *h < 60.0 {
-                    (red, green, blue) = (c, x, 0.0);
-                } else if *h < 120.0 {
-                    (red, green, blue) = (x, c, 0.0);
-                } else if *h < 180.0 {
-                    (red, green, blue) = (0.0, c, x);
-                } else if *h < 240.0 {
-                    (red, green, blue) = (0.0, x, c);
-                } else if *h < 300.0 {
-                    (red, green, blue) = (x, 0.0, c);
-                } else if *h < 360.0 {
-                    (red, green, blue) = (c, 0.0, x);
-                } else {
-                    panic!("h out of bounds");
-                }
-                let (red, green, blue) = (
-                    ((red + m) * 255.0) as i32,
-                    ((green + m) * 255.0) as i32,
-                    ((blue + m) * 255.0) as i32,
+                let (r, g, b) = match region {
+                    0 => (c, x, 0.0),
+                    1 => (x, c, 0.0),
+                    2 => (0.0, c, x),
+                    3 => (0.0, x, c),
+                    4 => (x, 0.0, c),
+                    _ => (c, 0.0, x),
+                };
+
+                let (r, g, b) = (
+                    ((r + m) * 255.0).round() as u8,
+                    ((g + m) * 255.0).round() as u8,
+                    ((b + m) * 255.0).round() as u8,
                 );
-                Encoding::Rgb(red, green, blue)
+                Encoding::Rgb(r, g, b)
             }
             Encoding::Hex(h) => {
-                let r = (h % 0x00ffff / 0xffff) as i32;
-                let g = (h % 0xff0000 / 0xff) as i32;
-                let b = (h % 0xffff00) as i32;
+                let r = ((h >> 16) & 0xFF) as u8;
+                let g = ((h >> 8) & 0xFF) as u8;
+                let b = (h & 0xFF) as u8;
                 Encoding::Rgb(r, g, b)
             }
         }
@@ -155,7 +134,6 @@ impl Encoding {
                 let b = c_max as f32;
                 return Ok((h, s, b));
             }
-            // TODO change to error type
             _ => return Err("Incorrect Encoding type".to_string()),
         }
     }
@@ -168,6 +146,37 @@ pub fn triad() {}
 pub fn square() {}
 pub fn analogous() {}
 pub fn monochromatic() {}
+
+fn int_hsb_to_rgb(h: u16, s: u16, b: u16) -> (u8, u8, u8) {
+    assert!(h <= 360);
+    assert!(s <= 1000);
+    assert!(b <= 1000);
+
+    let region = h / 60;
+    let h = h as f32;
+    let s = s as f32 / 1000.0;
+    let b = b as f32 / 1000.0;
+
+    let c = b * s;
+    let x = c * (1.0 - ((h / 60.0) % 2.0 - 1.0).abs());
+    let m = b - c;
+
+    let (r, g, b) = match region {
+        0 => (c, x, 0.0),
+        1 => (x, c, 0.0),
+        2 => (0.0, c, x),
+        3 => (0.0, x, c),
+        4 => (x, 0.0, c),
+        _ => (c, 0.0, x),
+    };
+
+    let (r, g, b) = (
+        ((r + m) * 255.0).round() as u8,
+        ((g + m) * 255.0).round() as u8,
+        ((b + m) * 255.0).round() as u8,
+    );
+    (r, g, b)
+}
 
 #[cfg(test)]
 mod tests {
@@ -189,7 +198,7 @@ mod tests {
 
     #[test]
     fn hsl_to_rgb() {
-        let test = Encoding::Hsl(10.0, 0.91, 0.56);
+        let test = Encoding::Hsl(10, 910, 560);
         println!("h: 10.0, s: 0.91, l: 0.56");
         let result = test.translate_to_rgb();
         assert_eq!(result, Encoding::Rgb(245, 73, 39));
@@ -197,8 +206,13 @@ mod tests {
 
     #[test]
     fn hsb_to_rgb() {
-        let test = Encoding::Hsb(10.0, 0.841, 0.961);
+        let test = Encoding::Hsb(10, 841, 961);
         let result = test.translate_to_rgb();
         assert_eq!(result, Encoding::Rgb(245, 73, 39));
+    }
+
+    #[test]
+    fn test_int_hsb_to_rgb() {
+        assert_eq!(int_hsb_to_rgb(10, 841, 961), (245, 73, 39));
     }
 }
