@@ -1,8 +1,8 @@
 use std::cmp::{max, min};
 
 // TODO
-// [] rewrite rgb_to_hsl() for new data types
-// [] write test for rgb_to_hsl()
+// [x] rewrite rgb_to_hsl() for new data types
+// [x] write test for rgb_to_hsl()
 // [] write tests for each region of hsl and hsb
 // [] change hex for new data types?
 
@@ -12,7 +12,7 @@ pub enum Encoding {
     Hsl(u16, u16, u16),
     Name(String),
     Hsb(u16, u16, u16),
-    Hex(i32),
+    Hex(u32),
 }
 
 impl PartialEq for Encoding {
@@ -177,10 +177,115 @@ mod tests {
     }
 
     #[test]
+    fn hsl_to_rgb2() {
+        let test = Encoding::Hsl(70, 912, 557);
+        let result = test.translate_to_rgb();
+        assert_eq!(result, Encoding::Rgb(211, 245, 39));
+    }
+
+    #[test]
+    fn hsl_to_rgb3() {
+        let test = Encoding::Hsl(130, 912, 557);
+        let result = test.translate_to_rgb();
+        assert_eq!(result, Encoding::Rgb(39, 245, 73));
+    }
+
+    #[test]
+    fn hsl_to_rgb4() {
+        let test = Encoding::Hsl(190, 912, 557);
+        let result = test.translate_to_rgb();
+        assert_eq!(result, Encoding::Rgb(39, 211, 245));
+    }
+
+    #[test]
+    fn hsl_to_rgb5() {
+        let test = Encoding::Hsl(250, 912, 557);
+        let result = test.translate_to_rgb();
+        assert_eq!(result, Encoding::Rgb(73, 39, 245));
+    }
+
+    #[test]
+    fn hsl_to_rgb6() {
+        let test = Encoding::Hsl(310, 912, 557);
+        let result = test.translate_to_rgb();
+        assert_eq!(result, Encoding::Rgb(245, 39, 211));
+    }
+
+    #[test]
+    #[should_panic]
+    fn hsl_h_too_big() {
+        Encoding::Hsl(370, 912, 557).translate_to_rgb();
+    }
+
+    #[test]
+    #[should_panic]
+    fn hsl_s_too_big() {
+        Encoding::Hsl(10, 1001, 557).translate_to_rgb();
+    }
+    #[test]
+    #[should_panic]
+    fn hsl_l_too_big() {
+        Encoding::Hsl(10, 912, 1001).translate_to_rgb();
+    }
+
+    #[test]
     fn hsb_to_rgb() {
         let test = Encoding::Hsb(10, 841, 961);
         let result = test.translate_to_rgb();
         assert_eq!(result, Encoding::Rgb(245, 73, 39));
+    }
+
+    #[test]
+    fn hsb_to_rgb2() {
+        let test = Encoding::Hsb(70, 841, 961);
+        let result = test.translate_to_rgb();
+        assert_eq!(result, Encoding::Rgb(211, 245, 39));
+    }
+
+    #[test]
+    fn hsb_to_rgb3() {
+        let test = Encoding::Hsb(130, 841, 961);
+        let result = test.translate_to_rgb();
+        assert_eq!(result, Encoding::Rgb(39, 245, 73));
+    }
+
+    #[test]
+    fn hsb_to_rgb4() {
+        let test = Encoding::Hsb(190, 841, 961);
+        let result = test.translate_to_rgb();
+        assert_eq!(result, Encoding::Rgb(39, 211, 245));
+    }
+
+    #[test]
+    fn hsb_to_rgb5() {
+        let test = Encoding::Hsb(250, 841, 961);
+        let result = test.translate_to_rgb();
+        assert_eq!(result, Encoding::Rgb(73, 39, 245));
+    }
+
+    #[test]
+    fn hsb_to_rgb6() {
+        let test = Encoding::Hsb(310, 841, 961);
+        let result = test.translate_to_rgb();
+        assert_eq!(result, Encoding::Rgb(245, 39, 211));
+    }
+
+    #[test]
+    #[should_panic]
+    fn hsb_h_too_big() {
+        Encoding::Hsb(376, 841, 961).translate_to_rgb();
+    }
+
+    #[test]
+    #[should_panic]
+    fn hsb_s_too_big() {
+        Encoding::Hsb(10, 1001, 961).translate_to_rgb();
+    }
+
+    #[test]
+    #[should_panic]
+    fn hsb_b_too_big() {
+        Encoding::Hsb(10, 841, 1001).translate_to_rgb();
     }
 
     #[test]
