@@ -1,5 +1,11 @@
 use std::cmp::{max, min};
 
+// TODO
+// [] rewrite rgb_to_hsl() for new data types
+// [] write test for rgb_to_hsl()
+// [] write tests for each region of hsl and hsb
+// [] change hex for new data types?
+
 #[derive(Debug)]
 pub enum Encoding {
     Rgb(u8, u8, u8),
@@ -33,9 +39,9 @@ impl Encoding {
         match self {
             Encoding::Rgb(r, g, b) => Encoding::Rgb(*r, *g, *b),
             Encoding::Hsl(h, s, l) => {
-                assert!(*h < 360);
-                assert!(*s < 1000);
-                assert!(*l < 1000);
+                assert!(*h <= 360);
+                assert!(*s <= 1000);
+                assert!(*l <= 1000);
 
                 let region = *h / 60;
                 let h = *h as f32;
@@ -102,39 +108,37 @@ impl Encoding {
     }
 
     fn rgb_to_hsl(&self) {}
-    fn rgb_to_hsb(&self) -> Result<(f32, f32, f32), String> {
+    fn rgb_to_hsb(&self) -> Encoding {
         match self {
             Encoding::Rgb(r, g, b) => {
-                let red = r / 255;
-                let green = g / 255;
-                let blue = b / 255;
-                let bigger = max(red, blue);
-                let smaller = min(red, blue);
-                let c_max = max(bigger, green);
-                let c_min = min(smaller, green);
-                let delta = c_max as f32 - c_min as f32;
-                let red = red as f32;
-                let green = green as f32;
-                let blue = blue as f32;
-                let h = if (c_max as f32) == red {
+                let red = ((*r as f32 / 255.0) * 1000.0).round();
+                let green = ((*g as f32 / 255.0) * 1000.0).round();
+                let blue = ((*b as f32 / 255.0) * 1000.0).round();
+                let bigger = max(red as i32, blue as i32);
+                let smaller = min(red as i32, blue as i32);
+                let c_max = max(bigger, green as i32) as f32;
+                let c_min = min(smaller, green as i32) as f32;
+                let delta = c_max - c_min;
+
+                let h = if c_max == red {
                     60.0 * ((green - blue) / delta % 6.0)
-                } else if (c_max as f32) == green {
+                } else if c_max == green {
                     60.0 * ((blue - red) / delta + 2.0)
-                } else if (c_max as f32) == blue {
+                } else if c_max == blue {
                     60.0 * ((red - green) / delta + 4.0)
                 } else {
                     0.0
                 };
 
-                let s = if c_max == 0 {
+                let s = if c_max == 0.0 {
                     0.0
                 } else {
-                    delta / (c_max as f32)
+                    (delta / c_max) * 1000.0
                 };
-                let b = c_max as f32;
-                return Ok((h, s, b));
+                let b = c_max;
+                return Encoding::Hsb(h.round() as u16, s.round() as u16, b.round() as u16);
             }
-            _ => return Err("Incorrect Encoding type".to_string()),
+            _ => panic!("wrong encoding type"),
         }
     }
     fn rgb_to_hex(&self) {}
@@ -177,5 +181,12 @@ mod tests {
         let test = Encoding::Hsb(10, 841, 961);
         let result = test.translate_to_rgb();
         assert_eq!(result, Encoding::Rgb(245, 73, 39));
+    }
+
+    #[test]
+    fn rgb_to_hsb() {
+        let test = Encoding::Rgb(245, 73, 39);
+        let result = test.rgb_to_hsb();
+        assert_eq!(result, Encoding::Hsb(10, 841, 961));
     }
 }
