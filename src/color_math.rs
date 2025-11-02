@@ -147,37 +147,6 @@ pub fn square() {}
 pub fn analogous() {}
 pub fn monochromatic() {}
 
-fn int_hsb_to_rgb(h: u16, s: u16, b: u16) -> (u8, u8, u8) {
-    assert!(h <= 360);
-    assert!(s <= 1000);
-    assert!(b <= 1000);
-
-    let region = h / 60;
-    let h = h as f32;
-    let s = s as f32 / 1000.0;
-    let b = b as f32 / 1000.0;
-
-    let c = b * s;
-    let x = c * (1.0 - ((h / 60.0) % 2.0 - 1.0).abs());
-    let m = b - c;
-
-    let (r, g, b) = match region {
-        0 => (c, x, 0.0),
-        1 => (x, c, 0.0),
-        2 => (0.0, c, x),
-        3 => (0.0, x, c),
-        4 => (x, 0.0, c),
-        _ => (c, 0.0, x),
-    };
-
-    let (r, g, b) = (
-        ((r + m) * 255.0).round() as u8,
-        ((g + m) * 255.0).round() as u8,
-        ((b + m) * 255.0).round() as u8,
-    );
-    (r, g, b)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -198,8 +167,7 @@ mod tests {
 
     #[test]
     fn hsl_to_rgb() {
-        let test = Encoding::Hsl(10, 910, 560);
-        println!("h: 10.0, s: 0.91, l: 0.56");
+        let test = Encoding::Hsl(10, 912, 557);
         let result = test.translate_to_rgb();
         assert_eq!(result, Encoding::Rgb(245, 73, 39));
     }
@@ -209,10 +177,5 @@ mod tests {
         let test = Encoding::Hsb(10, 841, 961);
         let result = test.translate_to_rgb();
         assert_eq!(result, Encoding::Rgb(245, 73, 39));
-    }
-
-    #[test]
-    fn test_int_hsb_to_rgb() {
-        assert_eq!(int_hsb_to_rgb(10, 841, 961), (245, 73, 39));
     }
 }
