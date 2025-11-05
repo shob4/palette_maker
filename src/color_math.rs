@@ -1,3 +1,4 @@
+use core::hash;
 use std::cmp::{max, min};
 
 // TODO
@@ -5,7 +6,8 @@ use std::cmp::{max, min};
 // [x] write test for rgb_to_hsl()
 // [x] write tests for each region of hsl and hsb
 // [x] change hex for new data types?
-// [] write test for rgb to hex
+// [x] write test for rgb to hex
+// [] write values method for Encoding?
 
 #[derive(Debug)]
 pub enum Encoding {
@@ -188,9 +190,29 @@ impl Encoding {
         }
     }
     fn rgb_to_name(&self) {}
+
+    pub fn complement(&self) -> Encoding {
+        match self {
+            Encoding::Rgb(r, g, b) => {
+                let r = 255 - *r;
+                let g = 255 - *g;
+                let b = 255 - *b;
+                Encoding::Rgb(r, g, b)
+            }
+            _ => {
+                let (r, g, b) = match self.translate_to_rgb() {
+                    Encoding::Rgb(r, g, b) => (r, g, b),
+                    _ => panic!("somehow translated into something other than rgb"),
+                };
+                let r = 255 - r;
+                let g = 255 - g;
+                let b = 255 - b;
+                Encoding::Rgb(r, g, b)
+            }
+        }
+    }
 }
 
-pub fn complement() {}
 pub fn triad() {}
 pub fn square() {}
 pub fn analogous() {}
