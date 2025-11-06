@@ -7,7 +7,8 @@ use std::cmp::{max, min};
 // [x] write tests for each region of hsl and hsb
 // [x] change hex for new data types?
 // [x] write test for rgb to hex
-// [] write values method for Encoding?
+// [x] write values method for Encoding?
+// [] figure out collision between encoding and rgb
 
 #[derive(Debug)]
 pub enum Encoding {
@@ -38,9 +39,9 @@ impl PartialEq for Encoding {
 }
 
 impl Encoding {
-    fn translate_to_rgb(&self) -> Encoding {
+    fn translate_to_rgb(&self) -> Rgb {
         match self {
-            Encoding::Rgb(r, g, b) => Encoding::Rgb(*r, *g, *b),
+            Encoding::Rgb(r, g, b) => Rgb::new(*r, *g, *b),
             Encoding::Hsl(h, s, l) => {
                 assert!(*h <= 360);
                 assert!(*s <= 1000);
@@ -68,9 +69,9 @@ impl Encoding {
                     ((g + m) * 255.0).round() as u8,
                     ((b + m) * 255.0).round() as u8,
                 );
-                Encoding::Rgb(r, g, b)
+                Rgb::new(r, g, b)
             }
-            Encoding::Name(_) => Encoding::Rgb(0, 0, 0),
+            Encoding::Name(_) => Rgb::new(0, 0, 0),
             Encoding::Hsb(h, s, b) => {
                 assert!(*h <= 360);
                 assert!(*s <= 1000);
@@ -99,13 +100,13 @@ impl Encoding {
                     ((g + m) * 255.0).round() as u8,
                     ((b + m) * 255.0).round() as u8,
                 );
-                Encoding::Rgb(r, g, b)
+                Rgb::new(r, g, b)
             }
             Encoding::Hex(h) => {
                 let r = ((h >> 16) & 0xFF) as u8;
                 let g = ((h >> 8) & 0xFF) as u8;
                 let b = (h & 0xFF) as u8;
-                Encoding::Rgb(r, g, b)
+                Rgb::new(r, g, b)
             }
         }
     }
@@ -190,26 +191,31 @@ impl Encoding {
         }
     }
     fn rgb_to_name(&self) {}
+}
 
-    pub fn complement(&self) -> Encoding {
-        match self {
-            Encoding::Rgb(r, g, b) => {
-                let r = 255 - *r;
-                let g = 255 - *g;
-                let b = 255 - *b;
-                Encoding::Rgb(r, g, b)
-            }
-            _ => {
-                let (r, g, b) = match self.translate_to_rgb() {
-                    Encoding::Rgb(r, g, b) => (r, g, b),
-                    _ => panic!("somehow translated into something other than rgb"),
-                };
-                let r = 255 - r;
-                let g = 255 - g;
-                let b = 255 - b;
-                Encoding::Rgb(r, g, b)
-            }
-        }
+pub fn complement(rgb: Rgb) -> Rgb {
+    let r = 255 - rgb.r;
+    let g = 255 - rgb.g;
+    let b = 255 - rgb.b;
+    Rgb::new(r, g, b)
+}
+
+#[derive(Debug)]
+pub struct Rgb {
+    r: u8,
+    g: u8,
+    b: u8,
+}
+
+impl PartialEq for Rgb {}
+
+impl Rgb {
+    fn encode(&self) -> Encoding {
+        Encoding::Rgb(self.r, self.g, self.b)
+    }
+
+    fn new(r: u8, g: u8, b: u8) -> Rgb {
+        Rgb { r: r, g: g, b: b }
     }
 }
 
