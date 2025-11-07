@@ -1,4 +1,3 @@
-use core::hash;
 use std::cmp::{max, min};
 
 // TODO
@@ -8,7 +7,9 @@ use std::cmp::{max, min};
 // [x] change hex for new data types?
 // [x] write test for rgb to hex
 // [x] write values method for Encoding?
-// [] figure out collision between encoding and rgb
+// [x] figure out collision between encoding and rgb
+// [x] add hsl struct and translations?
+// [] add tests for struct translation
 
 #[derive(Debug)]
 pub enum Encoding {
@@ -39,9 +40,9 @@ impl PartialEq for Encoding {
 }
 
 impl Encoding {
-    fn translate_to_rgb(&self) -> Rgb {
+    fn translate_to_rgb(&self) -> Encoding {
         match self {
-            Encoding::Rgb(r, g, b) => Rgb::new(*r, *g, *b),
+            Encoding::Rgb(r, g, b) => Encoding::Rgb(*r, *g, *b),
             Encoding::Hsl(h, s, l) => {
                 assert!(*h <= 360);
                 assert!(*s <= 1000);
@@ -69,9 +70,9 @@ impl Encoding {
                     ((g + m) * 255.0).round() as u8,
                     ((b + m) * 255.0).round() as u8,
                 );
-                Rgb::new(r, g, b)
+                Encoding::Rgb(r, g, b)
             }
-            Encoding::Name(_) => Rgb::new(0, 0, 0),
+            Encoding::Name(_) => Encoding::Rgb(0, 0, 0),
             Encoding::Hsb(h, s, b) => {
                 assert!(*h <= 360);
                 assert!(*s <= 1000);
@@ -100,13 +101,13 @@ impl Encoding {
                     ((g + m) * 255.0).round() as u8,
                     ((b + m) * 255.0).round() as u8,
                 );
-                Rgb::new(r, g, b)
+                Encoding::Rgb(r, g, b)
             }
             Encoding::Hex(h) => {
                 let r = ((h >> 16) & 0xFF) as u8;
                 let g = ((h >> 8) & 0xFF) as u8;
                 let b = (h & 0xFF) as u8;
-                Rgb::new(r, g, b)
+                Encoding::Rgb(r, g, b)
             }
         }
     }
@@ -191,13 +192,56 @@ impl Encoding {
         }
     }
     fn rgb_to_name(&self) {}
+
+    fn get_rgb(&self) -> Rgb {
+        match self {
+            Encoding::Rgb(r, g, b) => Rgb::new(r, g, b),
+            _ => {
+                self.translate_to_rgb();
+                match self {
+                    Encoding::Rgb(r, g, b) => Rgb::new(r, g, b),
+                    _ => panic!("could not translate to rgb")
+                }
+            }
+        }
+    }
+
+    fn get_hsl(&self) -> Hsl {
+        match self {
+            Encoding::Hsl(h, s, l) => Hsl::new(h, s, l),
+            _ => {
+                self.translate_to_rgb();
+                self.rgb_to_hsl();
+                match self {
+                    Encoding::Hsl(h, s, l) => Hsl::new(h, s, l),
+                    _ => panic!("could not translate to hsl")
+                }
+            }
+        }
+    }
 }
 
-pub fn complement(rgb: Rgb) -> Rgb {
-    let r = 255 - rgb.r;
-    let g = 255 - rgb.g;
-    let b = 255 - rgb.b;
-    Rgb::new(r, g, b)
+#[derive(Debug)]
+pub struct Hsl {
+    h: u16,
+    s: u16,
+    l: u16,
+}
+
+impl PartialEq for Hsl {
+    fn eq(&self, other: &Hsl) -> bool {
+        self.h == other.h && self.s == other.s && self.l == other.l
+    }
+}
+
+impl Hsl {
+    fn encode(&self) -> Encoding {
+        Encoding::hsl(self.h, self.s, self.l)
+    }
+
+    fn new(h: u16, s: u16, l: u16) {
+        Hsl { h: h, s: s, l: l }
+    }
 }
 
 #[derive(Debug)]
@@ -207,7 +251,11 @@ pub struct Rgb {
     b: u8,
 }
 
-impl PartialEq for Rgb {}
+impl PartialEq for Rgb {
+    fn eq(&self, other: &Rgb) -> bool {
+        self.r == other.r && self.g == other.g && self.b == other.b
+    }
+}
 
 impl Rgb {
     fn encode(&self) -> Encoding {
@@ -219,10 +267,17 @@ impl Rgb {
     }
 }
 
-pub fn triad() {}
-pub fn square() {}
-pub fn analogous() {}
-pub fn monochromatic() {}
+pub fn complement(rgb: Rgb) -> Rgb {
+    let r = 255 - rgb.r;
+    let g = 255 - rgb.g;
+    let b = 255 - rgb.b;
+    Rgb::new(r, g, b)
+}
+
+pub fn triad(rgb: Rgb) {}
+pub fn square(rgb: Rgb) {}
+pub fn analogous(rgb: Rgb) {}
+pub fn monochromatic(rgb: Rgb) {}
 
 #[cfg(test)]
 mod tests {
@@ -364,9 +419,8 @@ mod tests {
         Encoding::Hsb(376, 841, 961).translate_to_rgb();
     }
 
-    #[test]
-    #[should_panic]
-    fn hsb_s_too_big() {
+    #[s::newhould_panic]
+ Encoding::Rgb {
         Encoding::Hsb(10, 1001, 961).translate_to_rgb();
     }
 
