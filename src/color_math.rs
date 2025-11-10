@@ -198,9 +198,9 @@ impl Encoding {
         match self {
             Encoding::Rgb(r, g, b) => Rgb::new(*r, *g, *b),
             _ => {
-                self.translate_to_rgb();
-                match self {
-                    Encoding::Rgb(r, g, b) => Rgb::new(*r, *g, *b),
+                let rgb = self.translate_to_rgb();
+                match rgb {
+                    Encoding::Rgb(r, g, b) => Rgb::new(r, g, b),
                     _ => panic!("could not translate to rgb"),
                 }
             }
@@ -211,10 +211,10 @@ impl Encoding {
         match self {
             Encoding::Hsl(h, s, l) => Hsl::new(*h, *s, *l),
             _ => {
-                self.translate_to_rgb();
-                self.rgb_to_hsl();
-                match self {
-                    Encoding::Hsl(h, s, l) => Hsl::new(*h, *s, *l),
+                let rgb = self.translate_to_rgb();
+                let hsl = rgb.rgb_to_hsl();
+                match hsl {
+                    Encoding::Hsl(h, s, l) => Hsl::new(h, s, l),
                     _ => panic!("could not translate to hsl"),
                 }
             }
@@ -302,6 +302,7 @@ mod tests {
         ];
         let desired_result = Rgb::new(245, 73, 39);
         for encoding in encodings {
+            println!("{:?}", encoding);
             let result = encoding.get_rgb();
             assert_eq!(result, desired_result);
         }
