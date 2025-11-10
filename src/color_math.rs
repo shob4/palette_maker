@@ -291,4 +291,19 @@ pub fn monochromatic(rgb: Rgb) {}
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_get_rgb() {
+        let encodings = [
+            Encoding::Rgb(245, 73, 39),
+            Encoding::Hsl(10, 912, 557),
+            Encoding::Hsb(10, 841, 961),
+            Encoding::Hex(0xf54927),
+        ];
+        let desired_result = Rgb::new(245, 73, 39);
+        for encoding in encodings {
+            let result = encoding.get_rgb();
+            assert_eq!(result, desired_result);
+        }
+    }
 }
