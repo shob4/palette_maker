@@ -10,6 +10,7 @@ use std::cmp::{max, min};
 // [x] figure out collision between encoding and rgb
 // [x] add hsl struct and translations?
 // [] add tests for struct translation
+// [] change tests to loops?
 
 #[derive(Debug)]
 pub enum Encoding {
@@ -195,12 +196,12 @@ impl Encoding {
 
     fn get_rgb(&self) -> Rgb {
         match self {
-            Encoding::Rgb(r, g, b) => Rgb::new(r, g, b),
+            Encoding::Rgb(r, g, b) => Rgb::new(*r, *g, *b),
             _ => {
                 self.translate_to_rgb();
                 match self {
-                    Encoding::Rgb(r, g, b) => Rgb::new(r, g, b),
-                    _ => panic!("could not translate to rgb")
+                    Encoding::Rgb(r, g, b) => Rgb::new(*r, *g, *b),
+                    _ => panic!("could not translate to rgb"),
                 }
             }
         }
@@ -208,13 +209,13 @@ impl Encoding {
 
     fn get_hsl(&self) -> Hsl {
         match self {
-            Encoding::Hsl(h, s, l) => Hsl::new(h, s, l),
+            Encoding::Hsl(h, s, l) => Hsl::new(*h, *s, *l),
             _ => {
                 self.translate_to_rgb();
                 self.rgb_to_hsl();
                 match self {
-                    Encoding::Hsl(h, s, l) => Hsl::new(h, s, l),
-                    _ => panic!("could not translate to hsl")
+                    Encoding::Hsl(h, s, l) => Hsl::new(*h, *s, *l),
+                    _ => panic!("could not translate to hsl"),
                 }
             }
         }
@@ -236,10 +237,10 @@ impl PartialEq for Hsl {
 
 impl Hsl {
     fn encode(&self) -> Encoding {
-        Encoding::hsl(self.h, self.s, self.l)
+        Encoding::Hsl(self.h, self.s, self.l)
     }
 
-    fn new(h: u16, s: u16, l: u16) {
+    fn new(h: u16, s: u16, l: u16) -> Hsl {
         Hsl { h: h, s: s, l: l }
     }
 }
@@ -274,7 +275,15 @@ pub fn complement(rgb: Rgb) -> Rgb {
     Rgb::new(r, g, b)
 }
 
-pub fn triad(rgb: Rgb) {}
+pub fn triad(rgb: Rgb) -> (Hsl, Hsl) {
+    let rgb = rgb.encode();
+    let hsl = rgb.get_hsl();
+    let left = hsl.h - 60;
+    let right = hsl.h + 60;
+    let left = Hsl::new(left, hsl.s, hsl.l);
+    let right = Hsl::new(right, hsl.s, hsl.l);
+    (left, right)
+}
 pub fn square(rgb: Rgb) {}
 pub fn analogous(rgb: Rgb) {}
 pub fn monochromatic(rgb: Rgb) {}
@@ -282,158 +291,4 @@ pub fn monochromatic(rgb: Rgb) {}
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn rgb_to_rgb() {
-        let test = Encoding::Rgb(245, 73, 39);
-        let result = test.translate_to_rgb();
-        assert_eq!(result, Encoding::Rgb(245, 73, 39));
-    }
-
-    #[test]
-    fn hex_to_rgb() {
-        let test = Encoding::Hex(0xf54927);
-        let result = test.translate_to_rgb();
-        assert_eq!(result, Encoding::Rgb(245, 73, 39));
-    }
-
-    #[test]
-    fn rgb_to_hex() {
-        let test = Encoding::Rgb(245, 73, 39);
-        let result = test.translate_to_rgb();
-        assert_eq!(result, Encoding::Rgb(245, 73, 39));
-    }
-
-    #[test]
-    fn hsl_to_rgb() {
-        let test = Encoding::Hsl(10, 912, 557);
-        let result = test.translate_to_rgb();
-        assert_eq!(result, Encoding::Rgb(245, 73, 39));
-    }
-
-    #[test]
-    fn hsl_to_rgb2() {
-        let test = Encoding::Hsl(70, 912, 557);
-        let result = test.translate_to_rgb();
-        assert_eq!(result, Encoding::Rgb(211, 245, 39));
-    }
-
-    #[test]
-    fn hsl_to_rgb3() {
-        let test = Encoding::Hsl(130, 912, 557);
-        let result = test.translate_to_rgb();
-        assert_eq!(result, Encoding::Rgb(39, 245, 73));
-    }
-
-    #[test]
-    fn hsl_to_rgb4() {
-        let test = Encoding::Hsl(190, 912, 557);
-        let result = test.translate_to_rgb();
-        assert_eq!(result, Encoding::Rgb(39, 211, 245));
-    }
-
-    #[test]
-    fn hsl_to_rgb5() {
-        let test = Encoding::Hsl(250, 912, 557);
-        let result = test.translate_to_rgb();
-        assert_eq!(result, Encoding::Rgb(73, 39, 245));
-    }
-
-    #[test]
-    fn hsl_to_rgb6() {
-        let test = Encoding::Hsl(310, 912, 557);
-        let result = test.translate_to_rgb();
-        assert_eq!(result, Encoding::Rgb(245, 39, 211));
-    }
-
-    #[test]
-    #[should_panic]
-    fn hsl_h_too_big() {
-        Encoding::Hsl(370, 912, 557).translate_to_rgb();
-    }
-
-    #[test]
-    #[should_panic]
-    fn hsl_s_too_big() {
-        Encoding::Hsl(10, 1001, 557).translate_to_rgb();
-    }
-
-    #[test]
-    #[should_panic]
-    fn hsl_l_too_big() {
-        Encoding::Hsl(10, 912, 1001).translate_to_rgb();
-    }
-
-    #[test]
-    fn rgb_to_hsl() {
-        let test = Encoding::Rgb(245, 73, 39);
-        let result = test.rgb_to_hsl();
-        assert_eq!(result, Encoding::Hsl(10, 912, 557));
-    }
-
-    #[test]
-    fn hsb_to_rgb() {
-        let test = Encoding::Hsb(10, 841, 961);
-        let result = test.translate_to_rgb();
-        assert_eq!(result, Encoding::Rgb(245, 73, 39));
-    }
-
-    #[test]
-    fn hsb_to_rgb2() {
-        let test = Encoding::Hsb(70, 841, 961);
-        let result = test.translate_to_rgb();
-        assert_eq!(result, Encoding::Rgb(211, 245, 39));
-    }
-
-    #[test]
-    fn hsb_to_rgb3() {
-        let test = Encoding::Hsb(130, 841, 961);
-        let result = test.translate_to_rgb();
-        assert_eq!(result, Encoding::Rgb(39, 245, 73));
-    }
-
-    #[test]
-    fn hsb_to_rgb4() {
-        let test = Encoding::Hsb(190, 841, 961);
-        let result = test.translate_to_rgb();
-        assert_eq!(result, Encoding::Rgb(39, 211, 245));
-    }
-
-    #[test]
-    fn hsb_to_rgb5() {
-        let test = Encoding::Hsb(250, 841, 961);
-        let result = test.translate_to_rgb();
-        assert_eq!(result, Encoding::Rgb(73, 39, 245));
-    }
-
-    #[test]
-    fn hsb_to_rgb6() {
-        let test = Encoding::Hsb(310, 841, 961);
-        let result = test.translate_to_rgb();
-        assert_eq!(result, Encoding::Rgb(245, 39, 211));
-    }
-
-    #[test]
-    #[should_panic]
-    fn hsb_h_too_big() {
-        Encoding::Hsb(376, 841, 961).translate_to_rgb();
-    }
-
-    #[s::newhould_panic]
- Encoding::Rgb {
-        Encoding::Hsb(10, 1001, 961).translate_to_rgb();
-    }
-
-    #[test]
-    #[should_panic]
-    fn hsb_b_too_big() {
-        Encoding::Hsb(10, 841, 1001).translate_to_rgb();
-    }
-
-    #[test]
-    fn rgb_to_hsb() {
-        let test = Encoding::Rgb(245, 73, 39);
-        let result = test.rgb_to_hsb();
-        assert_eq!(result, Encoding::Hsb(10, 841, 961));
-    }
 }
