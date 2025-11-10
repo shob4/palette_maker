@@ -1,4 +1,5 @@
 use std::cmp::{max, min};
+use std::collections::HashMap;
 
 // TODO
 // [x] rewrite rgb_to_hsl() for new data types
@@ -9,10 +10,11 @@ use std::cmp::{max, min};
 // [x] write values method for Encoding?
 // [x] figure out collision between encoding and rgb
 // [x] add hsl struct and translations?
-// [] add tests for struct translation
-// [] change tests to loops?
+// [x] add tests for struct translation
+// [x] change tests to loops?
+// [] add more cases to tests
 
-#[derive(Debug)]
+#[derive(Hash, Eq, Debug)]
 pub enum Encoding {
     Rgb(u8, u8, u8),
     Hsl(u16, u16, u16),
@@ -304,6 +306,40 @@ mod tests {
         for encoding in encodings {
             println!("{:?}", encoding);
             let result = encoding.get_rgb();
+            assert_eq!(result, desired_result);
+        }
+    }
+
+    #[test]
+    fn test_get_hsl() {
+        let encodings = [
+            Encoding::Rgb(245, 73, 39),
+            Encoding::Hsl(10, 912, 557),
+            Encoding::Hsb(10, 841, 961),
+            Encoding::Hex(0xf54927),
+        ];
+        let desired_result = Hsl::new(10, 912, 557);
+        for encoding in encodings {
+            println!("{:?}", encoding);
+            let result = encoding.get_hsl();
+            assert_eq!(result, desired_result);
+        }
+    }
+
+    #[test]
+    fn test_translate_to_rgb() {
+        let tests: HashMap<Encoding, Encoding> = HashMap::from([
+            (Encoding::Rgb(245, 73, 39), Encoding::Rgb(245, 73, 39)),
+            (Encoding::Hsl(10, 912, 557), Encoding::Rgb(245, 73, 39)),
+            (Encoding::Hsb(10, 841, 961), Encoding::Rgb(245, 73, 39)),
+            (Encoding::Hex(0xf54927), Encoding::Rgb(245, 73, 39)),
+        ]);
+        for (encoding, desired_result) in tests {
+            println!(
+                "encoding: {:?}, desired_result: {:?}",
+                encoding, desired_result
+            );
+            let result = encoding.translate_to_rgb();
             assert_eq!(result, desired_result);
         }
     }
