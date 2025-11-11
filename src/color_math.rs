@@ -361,10 +361,10 @@ mod tests {
     #[test]
     fn test_complement() {
         let tests: HashMap<Rgb, Rgb> = HashMap::from([
-            (Rgb::new(105, 62, 254), Rgb::new(210, 253, 63)),
-            (Rgb::new(210, 253, 63), Rgb::new(105, 62, 254)),
-            (Rgb::new(245, 73, 39), Rgb::new(38, 208, 246)),
-            (Rgb::new(38, 208, 246), Rgb::new(245, 73, 39)),
+            (Rgb::new(105, 62, 254), Rgb::new(150, 193, 1)),
+            (Rgb::new(210, 253, 63), Rgb::new(45, 2, 192)),
+            (Rgb::new(245, 73, 39), Rgb::new(10, 182, 216)),
+            (Rgb::new(38, 208, 246), Rgb::new(217, 47, 9)),
         ]);
         for (rgb, desired_result) in tests {
             println!("input: {:?}, desired_result: {:?}", rgb, desired_result);
@@ -378,15 +378,15 @@ mod tests {
         let tests: HashMap<Rgb, (Rgb, Rgb)> = HashMap::from([
             (
                 Rgb::new(244, 71, 40),
-                (Rgb::new(76, 39, 245), Rgb::new(41, 243, 84)),
+                (Rgb::new(101, 40, 244), Rgb::new(183, 244, 40)),
             ),
             (
-                Rgb::new(76, 39, 245),
-                (Rgb::new(244, 71, 40), Rgb::new(41, 243, 84)),
+                Rgb::new(101, 40, 244),
+                (Rgb::new(244, 71, 40), Rgb::new(183, 244, 40)),
             ),
             (
-                Rgb::new(41, 243, 84),
-                (Rgb::new(244, 71, 40), Rgb::new(76, 39, 245)),
+                Rgb::new(183, 244, 40),
+                (Rgb::new(244, 71, 40), Rgb::new(101, 40, 244)),
             ),
         ]);
         for (rgb, desired_results) in tests {
