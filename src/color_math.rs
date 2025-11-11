@@ -12,7 +12,11 @@ use std::collections::HashMap;
 // [x] add hsl struct and translations?
 // [x] add tests for struct translation
 // [x] change tests to loops?
-// [] add more cases to tests
+// [x] add more cases to tests
+// [] create test for other types for complement?
+// [] create test for triad
+//  [] test for multiple outputs
+// [] add names
 
 #[derive(Hash, Eq, Debug)]
 pub enum Encoding {
@@ -224,7 +228,7 @@ impl Encoding {
     }
 }
 
-#[derive(Debug)]
+#[derive(Hash, Eq, Debug)]
 pub struct Hsl {
     h: u16,
     s: u16,
@@ -247,7 +251,7 @@ impl Hsl {
     }
 }
 
-#[derive(Debug)]
+#[derive(Hash, Eq, Debug)]
 pub struct Rgb {
     r: u8,
     g: u8,
@@ -277,14 +281,18 @@ pub fn complement(rgb: Rgb) -> Rgb {
     Rgb::new(r, g, b)
 }
 
-pub fn triad(rgb: Rgb) -> (Hsl, Hsl) {
+pub fn triad(rgb: Rgb) -> (Rgb, Rgb) {
     let rgb = rgb.encode();
     let hsl = rgb.get_hsl();
     let left = hsl.h - 60;
     let right = hsl.h + 60;
-    let left = Hsl::new(left, hsl.s, hsl.l);
-    let right = Hsl::new(right, hsl.s, hsl.l);
-    (left, right)
+
+    let left_encoded = Hsl::new(left, hsl.s, hsl.l).encode();
+    let right_encoded = Hsl::new(right, hsl.s, hsl.l).encode();
+
+    let left_rgb = left_encoded.get_rgb();
+    let right_rgb = right_encoded.get_rgb();
+    (left_rgb, right_rgb)
 }
 pub fn square(rgb: Rgb) {}
 pub fn analogous(rgb: Rgb) {}
@@ -331,7 +339,13 @@ mod tests {
         let tests: HashMap<Encoding, Encoding> = HashMap::from([
             (Encoding::Rgb(245, 73, 39), Encoding::Rgb(245, 73, 39)),
             (Encoding::Hsl(10, 912, 557), Encoding::Rgb(245, 73, 39)),
+            (Encoding::Hsl(0, 912, 557), Encoding::Rgb(245, 39, 39)),
+            (Encoding::Hsl(10, 0, 557), Encoding::Rgb(142, 142, 142)),
+            (Encoding::Hsl(10, 912, 0), Encoding::Rgb(0, 0, 0)),
             (Encoding::Hsb(10, 841, 961), Encoding::Rgb(245, 73, 39)),
+            (Encoding::Hsb(0, 841, 961), Encoding::Rgb(245, 39, 39)),
+            (Encoding::Hsb(10, 0, 961), Encoding::Rgb(245, 245, 245)),
+            (Encoding::Hsb(10, 841, 0), Encoding::Rgb(0, 0, 0)),
             (Encoding::Hex(0xf54927), Encoding::Rgb(245, 73, 39)),
         ]);
         for (encoding, desired_result) in tests {
@@ -341,6 +355,53 @@ mod tests {
             );
             let result = encoding.translate_to_rgb();
             assert_eq!(result, desired_result);
+        }
+    }
+
+    #[test]
+    fn test_complement() {
+        let tests: HashMap<Rgb, Rgb> = HashMap::from([
+            (Rgb::new(105, 62, 254), Rgb::new(210, 253, 63)),
+            (Rgb::new(210, 253, 63), Rgb::new(105, 62, 254)),
+            (Rgb::new(245, 73, 39), Rgb::new(38, 208, 246)),
+            (Rgb::new(38, 208, 246), Rgb::new(245, 73, 39)),
+        ]);
+        for (rgb, desired_result) in tests {
+            println!("input: {:?}, desired_result: {:?}", rgb, desired_result);
+            let result = complement(rgb);
+            assert_eq!(result, desired_result);
+        }
+    }
+
+    #[test]
+    fn test_triad() {
+        let tests: HashMap<Rgb, (Rgb, Rgb)> = HashMap::from([
+            (
+                Rgb::new(244, 71, 40),
+                (Rgb::new(76, 39, 245), Rgb::new(41, 243, 84)),
+            ),
+            (
+                Rgb::new(76, 39, 245),
+                (Rgb::new(244, 71, 40), Rgb::new(41, 243, 84)),
+            ),
+            (
+                Rgb::new(41, 243, 84),
+                (Rgb::new(244, 71, 40), Rgb::new(76, 39, 245)),
+            ),
+        ]);
+        for (rgb, desired_results) in tests {
+            let (desired_result1, desired_result2) = desired_results;
+            println!(
+                "input: {:?}, desired_result1: {:?}, desired_result2: {:?}",
+                rgb, desired_result1, desired_result2
+            );
+            let results = triad(rgb);
+            let (result1, result2) = results;
+            if !((result1 == desired_result1 || result1 == desired_result2)
+                && (result2 == desired_result2 || result2 == desired_result1))
+            {
+                panic!("result1: {:?}, result2: {:?}", result1, result2);
+            }
         }
     }
 }
