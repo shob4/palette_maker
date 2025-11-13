@@ -17,8 +17,8 @@ use std::collections::HashMap;
 //  [x] test for multiple outputs
 // [] add names
 // [x] hsl or rgb
-//  [] add translation to hsl for Encoding
-//   [] finish translation from hex to hsl
+//  [x] add translation to hsl for Encoding
+//   [x] finish translation from hex to hsl
 // [] add get_hex
 
 #[derive(Hash, Eq, Debug)]
@@ -193,18 +193,14 @@ impl Encoding {
 
                 Encoding::Hsl(h, s, l)
             }
-            Encoding::Hex(_) => {
-                Encoding::Hsl(0, 0, 0)
-            }
-        }
-    }
+            Encoding::Hex(h) => {
+                let r = ((h >> 16) & 0xFF) as u8;
+                let g = ((h >> 8) & 0xFF) as u8;
+                let b = (h & 0xFF) as u8;
 
-    fn rgb_to_hsl(&self) -> Encoding {
-        match self {
-            Encoding::Rgb(r, g, b) => {
-                let r = ((*r as f32 / 255.0) * 1000.0).round();
-                let g = ((*g as f32 / 255.0) * 1000.0).round();
-                let b = ((*b as f32 / 255.0) * 1000.0).round();
+                let r = ((r as f32 / 255.0) * 1000.0).round();
+                let g = ((g as f32 / 255.0) * 1000.0).round();
+                let b = ((b as f32 / 255.0) * 1000.0).round();
                 let bigger = max(r as i32, b as i32);
                 let smaller = min(r as i32, b as i32);
                 let c_max = max(bigger, g as i32) as f32;
@@ -233,7 +229,6 @@ impl Encoding {
 
                 Encoding::Hsl(h.round() as u16, s.round() as u16, l.round() as u16)
             }
-            _ => panic!("wrong encoding type"),
         }
     }
 
@@ -310,11 +305,38 @@ impl Encoding {
         match self {
             Encoding::Hsl(h, s, l) => Hsl::new(*h, *s, *l),
             _ => {
-                let rgb = self.translate_to_rgb();
-                let hsl = rgb.rgb_to_hsl();
+                let hsl = self.translate_to_hsl();
                 match hsl {
                     Encoding::Hsl(h, s, l) => Hsl::new(h, s, l),
                     _ => panic!("could not translate to hsl"),
+                }
+            }
+        }
+    }
+
+    // -----------------------
+
+    fn get_hex(&self) -> u32 {
+        match self {
+            Encoding::Hex(h) => h,
+            Encoding::Rgb(r, g, b) => {
+                let hex = self.rgb_to_hex();
+                match hex {
+                    Encoding::Hex(h) => h,
+                    _ => panic!("could not translate rgb to hex"),
+                }
+            }
+            _ => {
+                let rgb = self.translate_to_rgb();
+                match rgb {
+                    Encoding::Rgb(r, g, b) => {
+                        let hex = self.rgb_to_hex();
+                        match hex {
+                            Encoding::Hex(h) => h,
+                            _ => panic!("could not translate rgb to hex"),
+                        }
+                    }
+                    _ => panic!("could not translate to rgb for hex"),
                 }
             }
         }
