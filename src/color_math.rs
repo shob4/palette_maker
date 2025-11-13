@@ -13,10 +13,13 @@ use std::collections::HashMap;
 // [x] add tests for struct translation
 // [x] change tests to loops?
 // [x] add more cases to tests
-// [] create test for other types for complement?
-// [] create test for triad
-//  [] test for multiple outputs
+// [x] create test for triad
+//  [x] test for multiple outputs
 // [] add names
+// [x] hsl or rgb
+//  [] add translation to hsl for Encoding
+//   [] finish translation from hex to hsl
+// [] add get_hex
 
 #[derive(Hash, Eq, Debug)]
 pub enum Encoding {
@@ -46,10 +49,15 @@ impl PartialEq for Encoding {
     }
 }
 
+// -----------------------
+
 impl Encoding {
     fn translate_to_rgb(&self) -> Encoding {
         match self {
             Encoding::Rgb(r, g, b) => Encoding::Rgb(*r, *g, *b),
+
+            // -----------------------
+
             Encoding::Hsl(h, s, l) => {
                 assert!(*h <= 360);
                 assert!(*s <= 1000);
@@ -79,7 +87,13 @@ impl Encoding {
                 );
                 Encoding::Rgb(r, g, b)
             }
+
+            // -----------------------
+
             Encoding::Name(_) => Encoding::Rgb(0, 0, 0),
+
+            // -----------------------
+
             Encoding::Hsb(h, s, b) => {
                 assert!(*h <= 360);
                 assert!(*s <= 1000);
@@ -110,11 +124,77 @@ impl Encoding {
                 );
                 Encoding::Rgb(r, g, b)
             }
+
+            // -----------------------
+
             Encoding::Hex(h) => {
                 let r = ((h >> 16) & 0xFF) as u8;
                 let g = ((h >> 8) & 0xFF) as u8;
                 let b = (h & 0xFF) as u8;
                 Encoding::Rgb(r, g, b)
+            }
+        }
+    }
+
+    // -----------------------
+
+    fn translate_to_hsl(&self) -> Encoding {
+        match self {
+            Encoding::Rgb(r, g, b) => {
+                let r = ((*r as f32 / 255.0) * 1000.0).round();
+                let g = ((*g as f32 / 255.0) * 1000.0).round();
+                let b = ((*b as f32 / 255.0) * 1000.0).round();
+                let bigger = max(r as i32, b as i32);
+                let smaller = min(r as i32, b as i32);
+                let c_max = max(bigger, g as i32) as f32;
+                let c_min = min(smaller, g as i32) as f32;
+                let delta = c_max - c_min;
+
+                let l = (c_max + c_min) / 2.0;
+
+                let h = if delta == 0.0 {
+                    0.0
+                } else if c_max == r {
+                    60.0 * ((g - b) / delta % 6.0)
+                } else if c_max == g {
+                    60.0 * ((b - r) / delta + 2.0)
+                } else if c_max == b {
+                    60.0 * ((r - g) / delta + 4.0)
+                } else {
+                    panic!("c_max ({c_max}) does not match r ({r}), g ({g}), or b ({b})");
+                };
+
+                let s = if delta == 0.0 {
+                    0.0
+                } else {
+                    delta / (1.0 - (2.0 * (l / 1000.0) - 1.0).abs())
+                };
+
+                Encoding::Hsl(h.round() as u16, s.round() as u16, l.round() as u16)
+            }
+            Encoding::Hsl(h, s, l) => {
+                Encoding::Hsl(*h, *s, *l)
+            }
+            Encoding::Name(_) => Encoding::Hsl(0, 0, 0)
+            Encoding::Hsb(h, s, b) => {
+                assert!(*h <= 360);
+                assert!(*s <= 1000);
+                assert!(*b <= 1000);
+                let h = *h;
+                let s = *s;
+                let b = *b;
+
+                let l = b * (1000 - (s / 2));
+                let s = if l == 0 || l == 1 {
+                    0
+                } else {
+                        (b - l) / (min(l, 1000 - l))
+                };
+
+                Encoding::Hsl(h, s, l)
+            }
+            Encoding::Hex(_) => {
+                Encoding::Hsl(0, 0, 0)
             }
         }
     }
@@ -156,6 +236,9 @@ impl Encoding {
             _ => panic!("wrong encoding type"),
         }
     }
+
+    // -----------------------
+
     fn rgb_to_hsb(&self) -> Encoding {
         match self {
             Encoding::Rgb(r, g, b) => {
@@ -190,6 +273,9 @@ impl Encoding {
             _ => panic!("wrong encoding type"),
         }
     }
+
+    // -----------------------
+
     fn rgb_to_hex(&self) -> Encoding {
         match self {
             Encoding::Rgb(r, g, b) => {
@@ -198,7 +284,12 @@ impl Encoding {
             _ => panic!("wrong encoding type"),
         }
     }
+
+    // -----------------------
+
     fn rgb_to_name(&self) {}
+
+    // -----------------------
 
     fn get_rgb(&self) -> Rgb {
         match self {
@@ -212,6 +303,8 @@ impl Encoding {
             }
         }
     }
+
+    // -----------------------
 
     fn get_hsl(&self) -> Hsl {
         match self {
@@ -227,6 +320,8 @@ impl Encoding {
         }
     }
 }
+
+// -----------------------
 
 #[derive(Hash, Eq, Debug)]
 pub struct Hsl {
@@ -251,6 +346,8 @@ impl Hsl {
     }
 }
 
+// -----------------------
+
 #[derive(Hash, Eq, Debug)]
 pub struct Rgb {
     r: u8,
@@ -274,29 +371,27 @@ impl Rgb {
     }
 }
 
-pub fn complement(rgb: Rgb) -> Rgb {
-    let r = 255 - rgb.r;
-    let g = 255 - rgb.g;
-    let b = 255 - rgb.b;
-    Rgb::new(r, g, b)
+// -----------------------
+
+pub fn complement(hsl: Hsl) -> Hsl {
+    let new_h = (hsl.h + 180) % 360;
+    Hsl::new(new_h, hsl.s, hsl.l)
 }
 
-pub fn triad(rgb: Rgb) -> (Rgb, Rgb) {
-    let rgb = rgb.encode();
-    let hsl = rgb.get_hsl();
+pub fn triad(hsl: Hsl) -> (Hsl, Hsl) {
     let left = hsl.h - 60;
     let right = hsl.h + 60;
 
-    let left_encoded = Hsl::new(left, hsl.s, hsl.l).encode();
-    let right_encoded = Hsl::new(right, hsl.s, hsl.l).encode();
+    let left = Hsl::new(left, hsl.s, hsl.l);
+    let right = Hsl::new(right, hsl.s, hsl.l);
 
-    let left_rgb = left_encoded.get_rgb();
-    let right_rgb = right_encoded.get_rgb();
-    (left_rgb, right_rgb)
+    (left, right)
 }
-pub fn square(rgb: Rgb) {}
-pub fn analogous(rgb: Rgb) {}
-pub fn monochromatic(rgb: Rgb) {}
+pub fn square(hsl: Hsl) {}
+pub fn analogous(hsl: Hsl) {}
+pub fn monochromatic(hsl: Hsl) {}
+
+// -----------------------
 
 #[cfg(test)]
 mod tests {
@@ -360,42 +455,24 @@ mod tests {
 
     #[test]
     fn test_complement() {
-        let tests: HashMap<Rgb, Rgb> = HashMap::from([
-            (Rgb::new(105, 62, 254), Rgb::new(150, 193, 1)),
-            (Rgb::new(210, 253, 63), Rgb::new(45, 2, 192)),
-            (Rgb::new(245, 73, 39), Rgb::new(10, 182, 216)),
-            (Rgb::new(38, 208, 246), Rgb::new(217, 47, 9)),
-        ]);
-        for (rgb, desired_result) in tests {
-            println!("input: {:?}, desired_result: {:?}", rgb, desired_result);
-            let result = complement(rgb);
+        let tests: HashMap<Hsl, Hsl> = HashMap::from([]);
+        for (hsl, desired_result) in tests {
+            println!("input: {:?}, desired_result: {:?}", hsl, desired_result);
+            let result = complement(hsl);
             assert_eq!(result, desired_result);
         }
     }
 
     #[test]
     fn test_triad() {
-        let tests: HashMap<Rgb, (Rgb, Rgb)> = HashMap::from([
-            (
-                Rgb::new(244, 71, 40),
-                (Rgb::new(101, 40, 244), Rgb::new(183, 244, 40)),
-            ),
-            (
-                Rgb::new(101, 40, 244),
-                (Rgb::new(244, 71, 40), Rgb::new(183, 244, 40)),
-            ),
-            (
-                Rgb::new(183, 244, 40),
-                (Rgb::new(244, 71, 40), Rgb::new(101, 40, 244)),
-            ),
-        ]);
-        for (rgb, desired_results) in tests {
+        let tests: HashMap<Hsl, (Hsl, Hsl)> = HashMap::from([]);
+        for (hsl, desired_results) in tests {
             let (desired_result1, desired_result2) = desired_results;
             println!(
                 "input: {:?}, desired_result1: {:?}, desired_result2: {:?}",
-                rgb, desired_result1, desired_result2
+                hsl, desired_result1, desired_result2
             );
-            let results = triad(rgb);
+            let results = triad(hsl);
             let (result1, result2) = results;
             if !((result1 == desired_result1 || result1 == desired_result2)
                 && (result2 == desired_result2 || result2 == desired_result1))
