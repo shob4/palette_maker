@@ -5,8 +5,8 @@ use crate::encoding::Encoding;
 //  [x] hex
 //  [x] hsb
 //  [] name
-// [] full color?
-//  would that make the others defunct?
+// [] full color
+//  [] use rgb to get hex and name (when it is added)
 
 #[derive(Hash, Eq, Debug)]
 pub struct Hsl {

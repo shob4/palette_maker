@@ -1,5 +1,5 @@
-use std::cmp::{max, min};
 use crate::color_spaces::{Hsl, Rgb};
+use std::cmp::{max, min};
 
 // TODO
 // [] add name
@@ -41,7 +41,6 @@ impl Encoding {
             Encoding::Rgb(r, g, b) => Encoding::Rgb(*r, *g, *b),
 
             // -----------------------
-
             Encoding::Hsl(h, s, l) => {
                 assert!(*h <= 360);
                 assert!(*s <= 1000);
@@ -73,11 +72,9 @@ impl Encoding {
             }
 
             // -----------------------
-
             Encoding::Name(_) => Encoding::Rgb(0, 0, 0),
 
             // -----------------------
-
             Encoding::Hsb(h, s, b) => {
                 assert!(*h <= 360);
                 assert!(*s <= 1000);
@@ -110,7 +107,6 @@ impl Encoding {
             }
 
             // -----------------------
-
             Encoding::Hex(h) => {
                 let r = ((h >> 16) & 0xFF) as u8;
                 let g = ((h >> 8) & 0xFF) as u8;
@@ -156,10 +152,8 @@ impl Encoding {
 
                 Encoding::Hsl(h.round() as u16, s.round() as u16, l.round() as u16)
             }
-            Encoding::Hsl(h, s, l) => {
-                Encoding::Hsl(*h, *s, *l)
-            }
-            Encoding::Name(_) => Encoding::Hsl(0, 0, 0)
+            Encoding::Hsl(h, s, l) => Encoding::Hsl(*h, *s, *l),
+            Encoding::Name(_) => Encoding::Hsl(0, 0, 0),
             Encoding::Hsb(h, s, b) => {
                 assert!(*h <= 360);
                 assert!(*s <= 1000);
@@ -172,7 +166,7 @@ impl Encoding {
                 let s = if l == 0 || l == 1 {
                     0
                 } else {
-                        (b - l) / (min(l, 1000 - l))
+                    (b - l) / (min(l, 1000 - l))
                 };
 
                 Encoding::Hsl(h, s, l)
