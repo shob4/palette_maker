@@ -1,5 +1,13 @@
 use crate::encoding::Encoding;
 
+// TODO
+// [] add other spaces?
+//  [x] hex
+//  [x] hsb
+//  [] name
+// [] full color?
+//  would that make the others defunct?
+
 #[derive(Hash, Eq, Debug)]
 pub struct Hsl {
     pub h: u16,
@@ -45,5 +53,49 @@ impl Rgb {
 
     pub fn new(r: u8, g: u8, b: u8) -> Rgb {
         Rgb { r: r, g: g, b: b }
+    }
+}
+
+#[derive(Hash, Eq, Debug)]
+pub struct Hsb {
+    pub h: u16,
+    pub s: u16,
+    pub b: u16,
+}
+
+impl PartialEq for Hsb {
+    fn eq(&self, other: &Hsb) -> bool {
+        self.h == other.h && self.s == other.s && self.b == other.b
+    }
+}
+
+impl Hsb {
+    pub fn encode(&self) -> Encoding {
+        Encoding::Hsb(self.h, self.s, self.b)
+    }
+
+    pub fn new(h: u16, s: u16, b: u16) -> Hsb {
+        Hsb { h: h, s: s, b: b }
+    }
+}
+
+#[derive(Hash, Eq, Debug)]
+pub struct Hex {
+    pub h: u32,
+}
+
+impl PartialEq for Hex {
+    fn eq(&self, other: &Hex) -> bool {
+        self.h == other.h
+    }
+}
+
+impl Hex {
+    pub fn encode(&self) -> Encoding {
+        Encoding::Hex(self.h)
+    }
+
+    pub fn new(h: u32) -> Hex {
+        Hex { h: h }
     }
 }

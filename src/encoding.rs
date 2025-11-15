@@ -1,6 +1,10 @@
 use std::cmp::{max, min};
 use crate::color_spaces::{Hsl, Rgb};
 
+// TODO
+// [] add name
+// [] add tests for get_*
+
 #[derive(Hash, Eq, Debug)]
 pub enum Encoding {
     Rgb(u8, u8, u8),
