@@ -99,3 +99,12 @@ impl Hex {
         Hex { h: h }
     }
 }
+
+#[derive(Hash, Eq, Debug)]
+pub struct Color {
+    pub rgb: Rgb,
+    pub hsl: Hsl,
+    pub hsb: Hsb,
+    pub hex: Hex,
+    pub name: String,
+}

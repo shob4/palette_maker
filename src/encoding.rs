@@ -1,4 +1,4 @@
-use crate::color_spaces::{Hsl, Rgb};
+use crate::color_spaces::{Hex, Hsl, Rgb};
 use std::cmp::{max, min};
 
 // TODO
@@ -212,12 +212,58 @@ impl Encoding {
 
     // -----------------------
 
-    fn rgb_to_hsb(&self) -> Encoding {
+    fn translate_to_hsb(&self) -> Encoding {
         match self {
             Encoding::Rgb(r, g, b) => {
                 let red = ((*r as f32 / 255.0) * 1000.0).round();
                 let green = ((*g as f32 / 255.0) * 1000.0).round();
                 let blue = ((*b as f32 / 255.0) * 1000.0).round();
+                let bigger = max(red as i32, blue as i32);
+                let smaller = min(red as i32, blue as i32);
+                let c_max = max(bigger, green as i32) as f32;
+                let c_min = min(smaller, green as i32) as f32;
+                let delta = c_max - c_min;
+
+                let h = if c_max == red {
+                    60.0 * ((green - blue) / delta % 6.0)
+                } else if c_max == green {
+                    60.0 * ((blue - red) / delta + 2.0)
+                } else if c_max == blue {
+                    60.0 * ((red - green) / delta + 4.0)
+                } else {
+                    0.0
+                };
+
+                let s = if c_max == 0.0 {
+                    0.0
+                } else {
+                    (delta / c_max) * 1000.0
+                };
+                let b = c_max;
+
+                Encoding::Hsb(h.round() as u16, s.round() as u16, b.round() as u16)
+            }
+            Encoding::Hsl(h, s, l) => {
+                assert!(*h <= 360);
+                assert!(*s <= 1000);
+                assert!(*l <= 1000);
+                let h = *h;
+                let old_s = *s;
+                let b = *l + old_s * min(*l, 1000 - *l);
+                let s = if b == 0 { 0 } else { 2 * (1000 - *l / b) };
+                Encoding::Hsb(h, s, b)
+            }
+            Encoding::Name(_) => Encoding::Hsb(0, 0, 0)
+            Encoding::Hsb(h, s, b) => Encoding::Hsb(*h, *s, *b)
+            Encoding::Hex(hex) => {
+                let r = ((hex >> 16) & 0xFF) as u8;
+                let g = ((hex >> 8) & 0xFF) as u8;
+                let b = (hex & 0xFF) as u8;
+
+                let red = ((r as f32 / 255.0) * 1000.0).round();
+                let green = ((g as f32 / 255.0) * 1000.0).round();
+                let blue = ((b as f32 / 255.0) * 1000.0).round();
+
                 let bigger = max(red as i32, blue as i32);
                 let smaller = min(red as i32, blue as i32);
                 let c_max = max(bigger, green as i32) as f32;
