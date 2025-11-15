@@ -108,3 +108,30 @@ pub struct Color {
     pub hex: Hex,
     pub name: String,
 }
+
+impl PartialEq for Color {
+    fn eq(&self, other: &Color) -> bool {
+        self.rgb == other.rgb
+            && self.hsl == other.hsl
+            && self.hsb == other.hsb
+            && self.hex == other.hex
+            && self.name == other.name
+    }
+}
+
+impl Color {
+    pub fn new(code: Encoding) -> Color {
+        let rgb = code.get_rgb();
+        let hsl = code.get_hsl();
+        let hsb = code.get_hsb();
+        let hex = code.get_hex();
+        // let name = code.get_name();
+        Color {
+            rgb: rgb,
+            hsl: hsl,
+            hsb: hsb,
+            hex: hex,
+            name: name,
+        }
+    }
+}

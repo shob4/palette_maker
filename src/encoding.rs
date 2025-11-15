@@ -1,4 +1,4 @@
-use crate::color_spaces::{Hex, Hsl, Rgb};
+use crate::color_spaces::{Hex, Hsl, Rgb, Hsb};
 use std::cmp::{max, min};
 
 // TODO
@@ -289,7 +289,6 @@ impl Encoding {
 
                 Encoding::Hsb(h.round() as u16, s.round() as u16, b.round() as u16)
             }
-            _ => panic!("wrong encoding type"),
         }
     }
 
@@ -306,7 +305,7 @@ impl Encoding {
 
     // -----------------------
 
-    fn rgb_to_name(&self) {}
+    fn translate_to_name(&self) -> Encoding {Encoding::Name("".to_string())}
 
     // -----------------------
 
@@ -340,13 +339,28 @@ impl Encoding {
 
     // -----------------------
 
-    pub fn get_hex(&self) -> u32 {
+    pub fn get_hsb(&self) -> Hsb {
         match self {
-            Encoding::Hex(h) => *h,
+            Encoding::Hsb(h, s, b) => Hsb::new(*h, *s, *b),
+            _ => {
+                let hsb = self.translate_to_hsb();
+                match hsb {
+                    Encoding::Hsl(h, s, b) => Hsb::new(h, s, b),
+                    _ => panic!("could not translate to hsb")
+                }
+            }
+        }
+    }
+
+    // -----------------------
+
+    pub fn get_hex(&self) -> Hex {
+        match self {
+            Encoding::Hex(h) => Hex::new(*h),
             Encoding::Rgb(_, _, _) => {
                 let hex = self.rgb_to_hex();
                 match hex {
-                    Encoding::Hex(h) => h,
+                    Encoding::Hex(h) => Hex::new(h),
                     _ => panic!("could not translate rgb to hex"),
                 }
             }
@@ -356,11 +370,26 @@ impl Encoding {
                     Encoding::Rgb(_, _, _) => {
                         let hex = self.rgb_to_hex();
                         match hex {
-                            Encoding::Hex(h) => h,
+                            Encoding::Hex(h) => Hex::new(h),
                             _ => panic!("could not translate rgb to hex"),
                         }
                     }
                     _ => panic!("could not translate to rgb for hex"),
+                }
+            }
+        }
+    }
+
+    // -----------------------
+
+    pub fn get_name(&self) -> &str {
+        match self {
+            Encoding::Name(n) => n,
+            _ => {
+                let name = self.translate_to_name();
+                match name {
+                    Encoding::Name(n) => &n.as_str(),
+                    _ => panic!("could not translate to name"),
                 }
             }
         }
