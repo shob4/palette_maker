@@ -56,6 +56,8 @@ impl Rgb {
     }
 }
 
+// -----------------------
+
 #[derive(Hash, Eq, Debug)]
 pub struct Hsb {
     pub h: u16,
@@ -79,6 +81,8 @@ impl Hsb {
     }
 }
 
+// -----------------------
+
 #[derive(Hash, Eq, Debug)]
 pub struct Hex {
     pub h: u32,
@@ -99,6 +103,8 @@ impl Hex {
         Hex { h: h }
     }
 }
+
+// -----------------------
 
 #[derive(Hash, Eq, Debug)]
 pub struct Color {
@@ -125,7 +131,7 @@ impl Color {
         let hsl = code.get_hsl();
         let hsb = code.get_hsb();
         let hex = code.get_hex();
-        // let name = code.get_name();
+        let name = code.get_name();
         Color {
             rgb: rgb,
             hsl: hsl,

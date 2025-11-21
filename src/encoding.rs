@@ -3,7 +3,10 @@ use std::cmp::{max, min};
 
 // TODO
 // [] add name
+//  [] distance between three points?
+//   [] rgb first?
 // [] add tests for get_*
+// [x] finish get_name()
 
 #[derive(Hash, Eq, Debug)]
 pub enum Encoding {
@@ -382,13 +385,13 @@ impl Encoding {
 
     // -----------------------
 
-    pub fn get_name(&self) -> &str {
+    pub fn get_name(&self) -> String {
         match self {
-            Encoding::Name(n) => n,
+            Encoding::Name(n) => String::from(n),
             _ => {
-                let name = self.translate_to_name();
+                let name = &self.translate_to_name();
                 match name {
-                    Encoding::Name(n) => &n.as_str(),
+                    Encoding::Name(n) => String::from(n),
                     _ => panic!("could not translate to name"),
                 }
             }
