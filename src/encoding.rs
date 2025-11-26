@@ -1,4 +1,4 @@
-use crate::color_spaces::{Hex, Hsl, Rgb, Hsb};
+use crate::color_spaces::*;
 use std::cmp::{max, min};
 
 // TODO
@@ -75,7 +75,10 @@ impl Encoding {
             }
 
             // -----------------------
-            Encoding::Name(_) => Encoding::Rgb(0, 0, 0),
+             
+            Encoding::Name(_) => {
+                todo!("get a list of named colors");
+            },
 
             // -----------------------
             Encoding::Hsb(h, s, b) => {
@@ -156,7 +159,9 @@ impl Encoding {
                 Encoding::Hsl(h.round() as u16, s.round() as u16, l.round() as u16)
             }
             Encoding::Hsl(h, s, l) => Encoding::Hsl(*h, *s, *l),
-            Encoding::Name(_) => Encoding::Hsl(0, 0, 0),
+            Encoding::Name(_) => {
+                todo!("get list of named colors");
+            },
             Encoding::Hsb(h, s, b) => {
                 assert!(*h <= 360);
                 assert!(*s <= 1000);
@@ -256,7 +261,9 @@ impl Encoding {
                 let s = if b == 0 { 0 } else { 2 * (1000 - *l / b) };
                 Encoding::Hsb(h, s, b)
             }
-            Encoding::Name(_) => Encoding::Hsb(0, 0, 0)
+            Encoding::Name(_) => {
+                todo!("get list of named colors");
+            }
             Encoding::Hsb(h, s, b) => Encoding::Hsb(*h, *s, *b)
             Encoding::Hex(hex) => {
                 let r = ((hex >> 16) & 0xFF) as u8;
@@ -308,7 +315,9 @@ impl Encoding {
 
     // -----------------------
 
-    fn translate_to_name(&self) -> Encoding {Encoding::Name("".to_string())}
+    fn translate_to_name(&self) -> Encoding {
+                todo!("get list of named colors");
+            }
 
     // -----------------------
 
