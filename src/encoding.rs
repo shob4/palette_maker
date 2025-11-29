@@ -1,5 +1,6 @@
 use crate::color_spaces::*;
-use std::cmp::{max, min};
+use crate::named_colors::NAMED_COLORS;
+use std::{cmp::{max, min}, collections::btree_map::Values};
 
 // TODO
 // [] add name
@@ -76,8 +77,12 @@ impl Encoding {
 
             // -----------------------
              
-            Encoding::Name(_) => {
-                todo!("get a list of named colors");
+            Encoding::Name(name) => {
+                let (r, g, b) = match NAMED_COLORS.get(name.as_str()) {
+                    Some(rgb) => *rgb,
+                    None => panic!("failed to get rgb from {name}")
+                };
+                Encoding::Rgb(r, g, b)
             },
 
             // -----------------------
@@ -159,8 +164,12 @@ impl Encoding {
                 Encoding::Hsl(h.round() as u16, s.round() as u16, l.round() as u16)
             }
             Encoding::Hsl(h, s, l) => Encoding::Hsl(*h, *s, *l),
-            Encoding::Name(_) => {
-                todo!("get list of named colors");
+            Encoding::Name(name) => {
+                let (r, g, b) = match NAMED_COLORS.get(name.as_str()) {
+                    Some(rgb) => *rgb,
+                    None => panic!("failed to get rgb from {name}")
+                };
+                Encoding::Rgb(r, g, b).translate_to_hsl()
             },
             Encoding::Hsb(h, s, b) => {
                 assert!(*h <= 360);
@@ -261,8 +270,12 @@ impl Encoding {
                 let s = if b == 0 { 0 } else { 2 * (1000 - *l / b) };
                 Encoding::Hsb(h, s, b)
             }
-            Encoding::Name(_) => {
-                todo!("get list of named colors");
+            Encoding::Name(name) => {
+                let (r, g, b) = match NAMED_COLORS.get(name.as_str()) {
+                    Some(rgb) => *rgb,
+                    None => panic!("failed to get rgb from {name}")
+                };
+                Encoding::Rgb(r, g, b).translate_to_hsb()
             }
             Encoding::Hsb(h, s, b) => Encoding::Hsb(*h, *s, *b)
             Encoding::Hex(hex) => {
@@ -316,7 +329,19 @@ impl Encoding {
     // -----------------------
 
     fn translate_to_name(&self) -> Encoding {
-                todo!("get list of named colors");
+        match self {
+            Encoding::Name(name) => Encoding::Name(name),
+            _ => {
+                let rgb = self.get_rgb();
+                let name = for (key, value) in NAMED_COLORS.iter() {
+                    if value == rgb {
+                        Encoding::Name(key)
+                    } else {
+                        panic!("No value found")
+                    }
+                }
+            }
+        }
             }
 
     // -----------------------
