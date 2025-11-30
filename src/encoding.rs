@@ -330,16 +330,16 @@ impl Encoding {
 
     fn translate_to_name(&self) -> Encoding {
         match self {
-            Encoding::Name(name) => Encoding::Name(name),
+            Encoding::Name(name) => Encoding::Name(name.to_string()),
             _ => {
                 let rgb = self.get_rgb();
-                let name = for (key, value) in NAMED_COLORS.iter() {
-                    if value == rgb {
-                        Encoding::Name(key)
-                    } else {
-                        panic!("No value found")
+                let mut name: Encoding = Encoding::Rgb(0, 0, 0);
+                for (key, (r, g, b)) in NAMED_COLORS.iter() {
+                    if Rgb::new(*r, *g, *b) == rgb {
+                        name = Encoding::Name(String::from(*key))
                     }
-                }
+                };
+                name
             }
         }
             }
