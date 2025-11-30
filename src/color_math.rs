@@ -1,4 +1,4 @@
-use crate::color_spaces::Hsl;
+use crate::color_spaces::{Hsl, Rgb};
 
 // TODO
 // [] add square
@@ -19,6 +19,7 @@ pub fn triad(hsl: Hsl) -> (Hsl, Hsl) {
 
     (left, right)
 }
+
 pub fn square(hsl: Hsl) -> (Hsl, Hsl, Hsl) {
     let left = (hsl.h + 90) % 360;
     let middle = (hsl.h + 180) % 360;
@@ -30,8 +31,27 @@ pub fn square(hsl: Hsl) -> (Hsl, Hsl, Hsl) {
 
     (left, middle, right)
 }
+
 pub fn analogous(hsl: Hsl) {}
+
 pub fn monochromatic(hsl: Hsl) {}
+
+pub fn three_node_distance(rgb1: Rgb, rgb2: Rgb) -> i32 {
+    let r = match (rgb1.r as i32 - rgb2.r as i32).checked_pow(2) {
+        Some(val) => val,
+        None => todo!("figure out how to handle overflow"),
+    };
+    let g = match (rgb1.g as i32 - rgb2.g as i32).checked_pow(2) {
+        Some(val) => val,
+        None => todo!("figure out how to handle overflow"),
+    };
+    let b = match (rgb1.b as i32 - rgb2.b as i32).checked_pow(2) {
+        Some(val) => val,
+        None => todo!("figure out how to handle overflow"),
+    };
+    let distance = r + g + b;
+    return distance;
+}
 
 // -----------------------
 

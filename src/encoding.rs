@@ -1,4 +1,5 @@
 use crate::color_spaces::*;
+use crate::color_math::three_node_distance;
 use crate::named_colors::NAMED_COLORS;
 use std::{cmp::{max, min}, collections::btree_map::Values};
 
@@ -334,9 +335,18 @@ impl Encoding {
             _ => {
                 let rgb = self.get_rgb();
                 let mut name: Encoding = Encoding::Rgb(0, 0, 0);
+                let mut min_distance = 999999999;
                 for (key, (r, g, b)) in NAMED_COLORS.iter() {
-                    if Rgb::new(*r, *g, *b) == rgb {
+                    let destination = Rgb::new(*r, *g, *b);
+                    let goal = Rgb::new(rgb.r, rgb.g, rgb.b);
+                    if destination == goal {
                         name = Encoding::Name(String::from(*key))
+                    } else {
+                        let new_distance = three_node_distance(goal, destination);
+                        if new_distance < min_distance {
+                            min_distance = new_distance;
+                            name = Encoding::Name(String::from(*key));
+                        }
                     }
                 };
                 name

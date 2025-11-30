@@ -35,9 +35,9 @@ impl Hsl {
 
 #[derive(Hash, Eq, Debug)]
 pub struct Rgb {
-    r: u8,
-    g: u8,
-    b: u8,
+    pub r: u8,
+    pub g: u8,
+    pub b: u8,
 }
 
 impl PartialEq for Rgb {
