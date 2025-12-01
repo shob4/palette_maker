@@ -35,21 +35,21 @@ pub fn analogous(hsl: Hsl) {}
 
 pub fn monochromatic(hsl: Hsl) {}
 
-pub fn three_node_distance(rgb1: Rgb, rgb2: Rgb) -> i32 {
+pub fn three_node_distance(rgb1: Rgb, rgb2: Rgb) -> u32 {
     let r = match (rgb1.r as i32 - rgb2.r as i32).checked_pow(2) {
-        Some(val) => val,
+        Some(val) => val.abs(),
         None => todo!("figure out how to handle overflow"),
     };
     let g = match (rgb1.g as i32 - rgb2.g as i32).checked_pow(2) {
-        Some(val) => val,
+        Some(val) => val.abs(),
         None => todo!("figure out how to handle overflow"),
     };
     let b = match (rgb1.b as i32 - rgb2.b as i32).checked_pow(2) {
-        Some(val) => val,
+        Some(val) => val.abs(),
         None => todo!("figure out how to handle overflow"),
     };
     let distance = r + g + b;
-    return distance;
+    return distance as u32;
 }
 
 // -----------------------

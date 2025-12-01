@@ -329,7 +329,7 @@ impl Encoding {
             _ => {
                 let rgb = self.get_rgb();
                 let mut name: Encoding = Encoding::Rgb(0, 0, 0);
-                let mut min_distance = 999999999;
+                let mut min_distance = u32::MAX;
                 for (key, (r, g, b)) in NAMED_COLORS.iter() {
                     let start = Rgb::new(*r, *g, *b);
                     let goal = Rgb::new(rgb.r, rgb.g, rgb.b);
@@ -338,7 +338,10 @@ impl Encoding {
                     } else {
                         let new_distance = three_node_distance(goal, start);
                         if new_distance < min_distance {
+                            println!("new_distance: {new_distance}, min_distance: {min_distance}");
                             min_distance = new_distance;
+                            println!("r: {r}, g: {g}, b: {b}");
+                            println!("{:?}", key);
                             name = Encoding::Name(String::from(*key));
                         }
                     }
