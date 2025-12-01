@@ -1,7 +1,6 @@
 use crate::color_spaces::{Hsl, Rgb};
 
 // TODO
-// [] add square
 // [] add analagous
 // [] add monochromatic
 

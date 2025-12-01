@@ -1,12 +1,6 @@
 use crate::encoding::Encoding;
 
 // TODO
-// [] add other spaces?
-//  [x] hex
-//  [x] hsb
-//  [] name
-// [] full color
-//  [] use rgb to get hex and name (when it is added)
 
 #[derive(Hash, Eq, Debug)]
 pub struct Hsl {

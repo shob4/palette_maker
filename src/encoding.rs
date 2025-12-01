@@ -1,14 +1,9 @@
-use crate::color_spaces::*;
 use crate::color_math::three_node_distance;
+use crate::color_spaces::*;
 use crate::named_colors::NAMED_COLORS;
-use std::{cmp::{max, min}, collections::btree_map::Values};
+use std::cmp::{max, min};
 
 // TODO
-// [] add name
-//  [] distance between three points?
-//   [] rgb first?
-// [] add tests for get_*
-// [x] finish get_name()
 
 #[derive(Hash, Eq, Debug)]
 pub enum Encoding {
@@ -77,14 +72,13 @@ impl Encoding {
             }
 
             // -----------------------
-             
             Encoding::Name(name) => {
                 let (r, g, b) = match NAMED_COLORS.get(name.as_str()) {
                     Some(rgb) => *rgb,
-                    None => panic!("failed to get rgb from {name}")
+                    None => panic!("failed to get rgb from {name}"),
                 };
                 Encoding::Rgb(r, g, b)
-            },
+            }
 
             // -----------------------
             Encoding::Hsb(h, s, b) => {
@@ -168,10 +162,10 @@ impl Encoding {
             Encoding::Name(name) => {
                 let (r, g, b) = match NAMED_COLORS.get(name.as_str()) {
                     Some(rgb) => *rgb,
-                    None => panic!("failed to get rgb from {name}")
+                    None => panic!("failed to get rgb from {name}"),
                 };
                 Encoding::Rgb(r, g, b).translate_to_hsl()
-            },
+            }
             Encoding::Hsb(h, s, b) => {
                 assert!(*h <= 360);
                 assert!(*s <= 1000);
@@ -274,11 +268,11 @@ impl Encoding {
             Encoding::Name(name) => {
                 let (r, g, b) = match NAMED_COLORS.get(name.as_str()) {
                     Some(rgb) => *rgb,
-                    None => panic!("failed to get rgb from {name}")
+                    None => panic!("failed to get rgb from {name}"),
                 };
                 Encoding::Rgb(r, g, b).translate_to_hsb()
             }
-            Encoding::Hsb(h, s, b) => Encoding::Hsb(*h, *s, *b)
+            Encoding::Hsb(h, s, b) => Encoding::Hsb(*h, *s, *b),
             Encoding::Hex(hex) => {
                 let r = ((hex >> 16) & 0xFF) as u8;
                 let g = ((hex >> 8) & 0xFF) as u8;
@@ -337,22 +331,22 @@ impl Encoding {
                 let mut name: Encoding = Encoding::Rgb(0, 0, 0);
                 let mut min_distance = 999999999;
                 for (key, (r, g, b)) in NAMED_COLORS.iter() {
-                    let destination = Rgb::new(*r, *g, *b);
+                    let start = Rgb::new(*r, *g, *b);
                     let goal = Rgb::new(rgb.r, rgb.g, rgb.b);
-                    if destination == goal {
+                    if start == goal {
                         name = Encoding::Name(String::from(*key))
                     } else {
-                        let new_distance = three_node_distance(goal, destination);
+                        let new_distance = three_node_distance(goal, start);
                         if new_distance < min_distance {
                             min_distance = new_distance;
                             name = Encoding::Name(String::from(*key));
                         }
                     }
-                };
+                }
                 name
             }
         }
-            }
+    }
 
     // -----------------------
 
@@ -393,7 +387,7 @@ impl Encoding {
                 let hsb = self.translate_to_hsb();
                 match hsb {
                     Encoding::Hsl(h, s, b) => Hsb::new(h, s, b),
-                    _ => panic!("could not translate to hsb")
+                    _ => panic!("could not translate to hsb"),
                 }
             }
         }
@@ -421,7 +415,7 @@ impl Encoding {
                             _ => panic!("could not translate rgb to hex"),
                         }
                     }
-                    _ => panic!("could not translate to rgb for hex"),
+                    _ => panic!("could not translate to rgb"),
                 }
             }
         }
@@ -439,6 +433,29 @@ impl Encoding {
                     _ => panic!("could not translate to name"),
                 }
             }
+        }
+    }
+}
+
+// -----------------------
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashMap;
+    // use crate::color_spaces::*;
+
+    #[test]
+    fn test_get_name() {
+        let tests: HashMap<Encoding, String> = HashMap::from([
+            (Encoding::Rgb(205, 92, 92), String::from("Indian Red")),
+            (Encoding::Rgb(205, 91, 93), String::from("Indian Red")),
+            (Encoding::Hsl(0, 53, 58), String::from("Indian Red")),
+        ]);
+
+        for (encoding, name) in tests {
+            println!("input: {:?}, desired result: {:?}", encoding, name);
+            assert_eq!(encoding.get_name(), name);
         }
     }
 }
