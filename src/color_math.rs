@@ -31,7 +31,15 @@ pub fn square(hsl: Hsl) -> (Hsl, Hsl, Hsl) {
     (left, middle, right)
 }
 
-pub fn analogous(hsl: Hsl) {}
+pub fn analogous(hsl: Hsl) -> (Hsl, Hsl) {
+    let left = (hsl.h + 30) % 360;
+    let right = (hsl.h + 330) % 360;
+
+    let left = Hsl::new(left, hsl.s, hsl.l);
+    let right = Hsl::new(right, hsl.s, hsl.l);
+
+    (left, right)
+}
 
 pub fn monochromatic(hsl: Hsl) {}
 

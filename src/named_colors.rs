@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::sync::LazyLock;
 pub static NAMED_COLORS: LazyLock<HashMap<&str, (u8, u8, u8)>> = LazyLock::new(|| {
     HashMap::from([
-        ("Indian Red", (204, 92, 92)),
+        ("Indian Red", (205, 92, 92)),
         ("Light Coral", (240, 128, 128)),
         ("Salmon", (250, 128, 114)),
         ("Dark Salmon", (233, 150, 122)),

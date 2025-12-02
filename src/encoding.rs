@@ -3,8 +3,6 @@ use crate::color_spaces::*;
 use crate::named_colors::NAMED_COLORS;
 use std::cmp::{max, min};
 
-// TODO
-
 #[derive(Hash, Eq, Debug)]
 pub enum Encoding {
     Rgb(u8, u8, u8),
@@ -453,12 +451,31 @@ mod tests {
         let tests: HashMap<Encoding, String> = HashMap::from([
             (Encoding::Rgb(205, 92, 92), String::from("Indian Red")),
             (Encoding::Rgb(205, 91, 93), String::from("Indian Red")),
-            (Encoding::Hsl(0, 53, 58), String::from("Indian Red")),
+            // don't know how it translates, so can't test off by ones
+            (Encoding::Hsl(0, 531, 582), String::from("Indian Red")),
+            (Encoding::Hsb(0, 551, 804), String::from("Indian Red")),
         ]);
 
         for (encoding, name) in tests {
             println!("input: {:?}, desired result: {:?}", encoding, name);
             assert_eq!(encoding.get_name(), name);
+        }
+    }
+
+    #[test]
+    fn test_get_rgb() {
+        let tests: HashMap<Encoding, Rgb> = HashMap::from([
+            (Encoding::Hsl(0, 531, 582), Rgb::new(205, 92, 92)),
+            (
+                Encoding::Name(String::from("Indian Red")),
+                Rgb::new(205, 92, 92),
+            ),
+            (Encoding::Hsb(0, 551, 804), Rgb::new(205, 92, 92)),
+        ]);
+
+        for (encoding, rgb) in tests {
+            println!("input: {:?}, desired result: {:?}", encoding, rgb);
+            assert_eq!(encoding.get_rgb(), rgb);
         }
     }
 }
