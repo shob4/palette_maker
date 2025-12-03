@@ -4,6 +4,7 @@ use crate::color_spaces::{Hsl, Rgb};
 // [] tests for analagous
 // [] tests for monochromatic
 // [] change to color?
+// [] return passed hsl/rgb?
 // [] figure out how to make gradients
 
 pub fn complement(hsl: Hsl) -> Hsl {
@@ -59,7 +60,49 @@ pub fn monochromatic(hsl: Hsl) -> (Hsl, Hsl) {
     }
 }
 
-pub fn three_node_distance(rgb1: Rgb, rgb2: Rgb) -> u32 {
+pub fn gradient(hsl: Hsl, hsl2: Hsl, num: u32) -> Vec<Hsl> {
+    assert!(hsl.h <= 360 && hsl2.h <= 360);
+    assert!(hsl.s <= 1000 && hsl2.s <= 1000);
+    assert!(hsl.l <= 1000 && hsl2.l <= 1000);
+    assert!(num > 1);
+
+    let mut gradient: Vec<Hsl> = Vec::new();
+    let h_interval = (hsl2.h as i32 - hsl2.h as i32) / num as i32;
+    let s_interval = (hsl2.s as i32 - hsl2.s as i32) / num as i32;
+    let l_interval = (hsl2.l as i32 - hsl2.l as i32) / num as i32;
+    let current_h = hsl.h as i32;
+    let current_s = hsl.s as i32;
+    let current_l = hsl.l as i32;
+    let destination_h = hsl2.h as i32;
+
+    while current_h + h_interval <= destination_h {
+        let current_h = current_h + h_interval;
+        let current_s = current_s + s_interval;
+        let current_l = current_l + l_interval;
+        gradient.push(Hsl::new(
+            current_h as u16,
+            current_s as u16,
+            current_l as u16,
+        ));
+    }
+    let current_h = hsl.h as i32;
+    let current_s = hsl.s as i32;
+    let current_l = hsl.l as i32;
+    while current_h + h_interval >= destination_h {
+        let current_h = current_h + h_interval;
+        let current_s = current_s + s_interval;
+        let current_l = current_l + l_interval;
+        gradient.push(Hsl::new(
+            current_h as u16,
+            current_s as u16,
+            current_l as u16,
+        ));
+    }
+
+    return gradient;
+}
+
+pub fn three_node_distance_rgb(rgb1: Rgb, rgb2: Rgb) -> u32 {
     let r = match (rgb1.r as i32 - rgb2.r as i32).checked_pow(2) {
         Some(val) => val.abs(),
         None => todo!("figure out how to handle overflow"),
@@ -141,8 +184,38 @@ mod tests {
     }
 
     #[test]
-    fn test_analagous() {}
+    fn test_analogous() {
+        let tests: HashMap<Hsl, (Hsl, Hsl)> = HashMap::from([
+            (
+                Hsl::new(60, 842, 319),
+                (Hsl::new(30, 842, 319), Hsl::new(90, 842, 319)),
+            ),
+            (
+                Hsl::new(30, 599, 599),
+                (Hsl::new(0, 599, 599), Hsl::new(60, 599, 599)),
+            ),
+            (
+                Hsl::new(0, 100, 100),
+                (Hsl::new(330, 100, 100), Hsl::new(30, 100, 100)),
+            ),
+        ]);
+
+        for (hsl, desired_result) in tests {
+            let (desired_left, desired_right) = desired_result;
+            println!("input: {:?}", hsl);
+            let (left, right) = analogous(hsl);
+            if !(left == desired_left && right == desired_right) {
+                panic!(
+                    "desired_left: {:?}, left: {:?}, desired_right: {:?}, right: {:?}",
+                    desired_left, left, desired_right, right
+                );
+            }
+        }
+    }
 
     #[test]
     fn test_monochromatic() {}
+
+    #[test]
+    fn test_gradient() {}
 }

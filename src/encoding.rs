@@ -1,4 +1,4 @@
-use crate::color_math::three_node_distance;
+use crate::color_math::three_node_distance_rgb;
 use crate::color_spaces::*;
 use crate::named_colors::NAMED_COLORS;
 use std::cmp::{max, min};
@@ -334,7 +334,7 @@ impl Encoding {
                     if start == goal {
                         name = Encoding::Name(String::from(*key))
                     } else {
-                        let new_distance = three_node_distance(goal, start);
+                        let new_distance = three_node_distance_rgb(goal, start);
                         if new_distance < min_distance {
                             println!("new_distance: {new_distance}, min_distance: {min_distance}");
                             min_distance = new_distance;
