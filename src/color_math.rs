@@ -5,7 +5,8 @@ use crate::color_spaces::{Hsl, Rgb};
 // [] tests for monochromatic
 // [] change to color?
 // [] return passed hsl/rgb?
-// [x] figure out how to make gradients
+// [] figure out how to make gradients
+//  [] figure out how to go arounda gradient
 
 pub fn complement(hsl: Hsl) -> Hsl {
     let new_h = (hsl.h + 180) % 360;
@@ -68,20 +69,39 @@ pub fn gradient(hsl: Hsl, hsl2: Hsl, num: u32) -> Vec<Hsl> {
     assert!(hsl.l <= 1000 && hsl2.l <= 1000);
     assert!(num > 1);
 
-    let mut gradient: Vec<Hsl> = Vec::new();
-    let h_interval = (hsl2.h as i32 - hsl.h as i32) / num as i32;
-    let s_interval = (hsl2.s as i32 - hsl.s as i32) / num as i32;
-    let l_interval = (hsl2.l as i32 - hsl.l as i32) / num as i32;
+    let hue: i32;
 
-    let current_h = hsl.h as i32;
+    if hsl.s == 0 {
+        hue = hsl2.h as i32;
+    } else {
+        hue = hsl.h as i32;
+    }
+
+    let mut gradient: Vec<Hsl> = Vec::new();
+    let destination_h = hsl2.h as i32;
+    let s_interval = (destination_h - hue) / num as i32;
+    let l_interval = (destination_h - hue) / num as i32;
+    let h_difference = destination_h - hue;
+    let h_interval: i32;
+
+    if h_difference > 180 {
+        h_interval = (360 - h_difference) / num as i32;
+    } else if h_difference < -180 {
+        h_interval = (360 + h_difference) / num as i32;
+    } else {
+        h_interval = h_difference / num as i32;
+    }
+
+    let current_h = hue;
     let current_s = hsl.s as i32;
     let current_l = hsl.l as i32;
-    let destination_h = hsl2.h as i32;
 
-    while (h_interval < 0 && current_h + h_interval <= destination_h)
-        || (h_interval > 0 && current_h + h_interval >= destination_h)
-    {
-        let current_h = current_h + h_interval;
+    for _ in 0..num {
+        let current_h = if current_h + h_interval < 0 {
+            current_h + h_interval + 360
+        } else {
+            current_h + h_interval % 360
+        };
         let current_s = current_s + s_interval;
         let current_l = current_l + l_interval;
         gradient.push(Hsl::new(
