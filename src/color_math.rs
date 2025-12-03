@@ -5,7 +5,7 @@ use crate::color_spaces::{Hsl, Rgb};
 // [] tests for monochromatic
 // [] change to color?
 // [] return passed hsl/rgb?
-// [] figure out how to make gradients
+// [x] figure out how to make gradients
 
 pub fn complement(hsl: Hsl) -> Hsl {
     let new_h = (hsl.h + 180) % 360;
@@ -44,20 +44,22 @@ pub fn analogous(hsl: Hsl) -> (Hsl, Hsl) {
     (left, right)
 }
 
-pub fn monochromatic(hsl: Hsl) -> (Hsl, Hsl) {
-    if hsl.l >= 950 {
-        let down = Hsl::new(hsl.h, hsl.s, hsl.l - 50);
-        let further_down = Hsl::new(hsl.h, hsl.s, hsl.l - 100);
-        return (further_down, down);
-    } else if hsl.l <= 50 {
-        let up = Hsl::new(hsl.h, hsl.s, hsl.l + 50);
-        let further_up = Hsl::new(hsl.h, hsl.s, hsl.l + 100);
-        return (up, further_up);
-    } else {
-        let down = Hsl::new(hsl.h, hsl.s, hsl.l - 50);
-        let up = Hsl::new(hsl.h, hsl.s, hsl.l + 50);
-        return (down, up);
+pub fn monochromatic(hsl: Hsl) -> Vec<Hsl> {
+    let mut monochrome: Vec<Hsl> = Vec::new();
+    let current_l = hsl.l;
+
+    while current_l + 50 <= 1000 {
+        let current_l = current_l + 50;
+        monochrome.push(Hsl::new(hsl.h, hsl.s, current_l));
     }
+
+    let current_l = hsl.l;
+    while current_l - 50 != 0 {
+        let current_l = current_l - 50;
+        monochrome.push(Hsl::new(hsl.h, hsl.s, current_l));
+    }
+
+    return monochrome;
 }
 
 pub fn gradient(hsl: Hsl, hsl2: Hsl, num: u32) -> Vec<Hsl> {
@@ -67,28 +69,18 @@ pub fn gradient(hsl: Hsl, hsl2: Hsl, num: u32) -> Vec<Hsl> {
     assert!(num > 1);
 
     let mut gradient: Vec<Hsl> = Vec::new();
-    let h_interval = (hsl2.h as i32 - hsl2.h as i32) / num as i32;
-    let s_interval = (hsl2.s as i32 - hsl2.s as i32) / num as i32;
-    let l_interval = (hsl2.l as i32 - hsl2.l as i32) / num as i32;
+    let h_interval = (hsl2.h as i32 - hsl.h as i32) / num as i32;
+    let s_interval = (hsl2.s as i32 - hsl.s as i32) / num as i32;
+    let l_interval = (hsl2.l as i32 - hsl.l as i32) / num as i32;
+
     let current_h = hsl.h as i32;
     let current_s = hsl.s as i32;
     let current_l = hsl.l as i32;
     let destination_h = hsl2.h as i32;
 
-    while current_h + h_interval <= destination_h {
-        let current_h = current_h + h_interval;
-        let current_s = current_s + s_interval;
-        let current_l = current_l + l_interval;
-        gradient.push(Hsl::new(
-            current_h as u16,
-            current_s as u16,
-            current_l as u16,
-        ));
-    }
-    let current_h = hsl.h as i32;
-    let current_s = hsl.s as i32;
-    let current_l = hsl.l as i32;
-    while current_h + h_interval >= destination_h {
+    while (h_interval < 0 && current_h + h_interval <= destination_h)
+        || (h_interval > 0 && current_h + h_interval >= destination_h)
+    {
         let current_h = current_h + h_interval;
         let current_s = current_s + s_interval;
         let current_l = current_l + l_interval;
