@@ -1,8 +1,10 @@
 use crate::color_spaces::{Hsl, Rgb};
 
 // TODO
-// [] add analagous
-// [] add monochromatic
+// [] tests for analagous
+// [] tests for monochromatic
+// [] change to color?
+// [] figure out how to make gradients
 
 pub fn complement(hsl: Hsl) -> Hsl {
     let new_h = (hsl.h + 180) % 360;
@@ -41,7 +43,21 @@ pub fn analogous(hsl: Hsl) -> (Hsl, Hsl) {
     (left, right)
 }
 
-pub fn monochromatic(hsl: Hsl) {}
+pub fn monochromatic(hsl: Hsl) -> (Hsl, Hsl) {
+    if hsl.l >= 950 {
+        let down = Hsl::new(hsl.h, hsl.s, hsl.l - 50);
+        let further_down = Hsl::new(hsl.h, hsl.s, hsl.l - 100);
+        return (further_down, down);
+    } else if hsl.l <= 50 {
+        let up = Hsl::new(hsl.h, hsl.s, hsl.l + 50);
+        let further_up = Hsl::new(hsl.h, hsl.s, hsl.l + 100);
+        return (up, further_up);
+    } else {
+        let down = Hsl::new(hsl.h, hsl.s, hsl.l - 50);
+        let up = Hsl::new(hsl.h, hsl.s, hsl.l + 50);
+        return (down, up);
+    }
+}
 
 pub fn three_node_distance(rgb1: Rgb, rgb2: Rgb) -> u32 {
     let r = match (rgb1.r as i32 - rgb2.r as i32).checked_pow(2) {
@@ -123,4 +139,10 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn test_analagous() {}
+
+    #[test]
+    fn test_monochromatic() {}
 }
