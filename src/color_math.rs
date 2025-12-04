@@ -47,20 +47,16 @@ pub fn analogous(hsl: Hsl) -> (Hsl, Hsl) {
 
 pub fn monochromatic(hsl: Hsl) -> Vec<Hsl> {
     let mut monochrome: Vec<Hsl> = Vec::new();
-    let current_l = hsl.l;
 
-    while current_l + 50 <= 1000 {
-        let current_l = current_l + 50;
-        monochrome.push(Hsl::new(hsl.h, hsl.s, current_l));
+    for l in ((hsl.l + 50)..=1000).step_by(50) {
+        monochrome.push(Hsl::new(hsl.h, hsl.s, l));
     }
 
-    let current_l = hsl.l;
-    while current_l - 50 != 0 {
-        let current_l = current_l - 50;
-        monochrome.push(Hsl::new(hsl.h, hsl.s, current_l));
+    for l in (50..hsl.l).rev().step_by(50) {
+        monochrome.push(Hsl::new(hsl.h, hsl.s, l));
     }
 
-    return monochrome;
+    monochrome
 }
 
 pub fn gradient(hsl: Hsl, hsl2: Hsl, num: u32) -> Vec<Hsl> {
@@ -69,49 +65,41 @@ pub fn gradient(hsl: Hsl, hsl2: Hsl, num: u32) -> Vec<Hsl> {
     assert!(hsl.l <= 1000 && hsl2.l <= 1000);
     assert!(num > 1);
 
-    let hue: i32;
+    let num = num as i32;
+    let mut gradient: Vec<Hsl> = Vec::with_capacity(num as usize);
 
-    if hsl.s == 0 {
-        hue = hsl2.h as i32;
+    let hue = if hsl.s == 0 {
+        hsl2.h as i32
     } else {
-        hue = hsl.h as i32;
-    }
+        hsl.h as i32
+    };
 
-    let mut gradient: Vec<Hsl> = Vec::new();
-    let destination_h = hsl2.h as i32;
-    let s_interval = (destination_h - hue) / num as i32;
-    let l_interval = (destination_h - hue) / num as i32;
-    let h_difference = destination_h - hue;
-    let h_interval: i32;
+    let mut h = hue;
+    let mut s = hsl.s as i32;
+    let mut l = hsl.l as i32;
 
-    if h_difference > 180 {
-        h_interval = (360 - h_difference) / num as i32;
+    let end_h = hsl2.h as i32;
+    let s_interval = (hsl2.s as i32 - s) / num;
+    let l_interval = (hsl2.l as i32 - l) / num;
+    let h_difference = end_h - hue;
+
+    let h_interval = if h_difference > 180 {
+        (360 - h_difference) / num
     } else if h_difference < -180 {
-        h_interval = (360 + h_difference) / num as i32;
+        (360 + h_difference) / num
     } else {
-        h_interval = h_difference / num as i32;
-    }
-
-    let current_h = hue;
-    let current_s = hsl.s as i32;
-    let current_l = hsl.l as i32;
+        h_difference / num
+    };
 
     for _ in 0..num {
-        let current_h = if current_h + h_interval < 0 {
-            current_h + h_interval + 360
-        } else {
-            current_h + h_interval % 360
-        };
-        let current_s = current_s + s_interval;
-        let current_l = current_l + l_interval;
-        gradient.push(Hsl::new(
-            current_h as u16,
-            current_s as u16,
-            current_l as u16,
-        ));
+        h = (h + h_interval).rem_euclid(360);
+        s = s + s_interval;
+        l = l + l_interval;
+
+        gradient.push(Hsl::new(h as u16, s as u16, l as u16));
     }
 
-    return gradient;
+    gradient
 }
 
 pub fn three_node_distance_rgb(rgb1: Rgb, rgb2: Rgb) -> u32 {
@@ -128,7 +116,7 @@ pub fn three_node_distance_rgb(rgb1: Rgb, rgb2: Rgb) -> u32 {
         None => todo!("figure out how to handle overflow"),
     };
     let distance = r + g + b;
-    return distance as u32;
+    distance as u32
 }
 
 // -----------------------
