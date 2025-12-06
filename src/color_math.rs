@@ -9,13 +9,13 @@ use crate::color_spaces::{Hsl, Rgb};
 //  [] figure out how to go arounda gradient
 
 pub fn complement(hsl: Hsl) -> Hsl {
-    let new_h = (hsl.h + 180) % 360;
+    let new_h = (hsl.h + 180).rem_euclid(360);
     Hsl::new(new_h, hsl.s, hsl.l)
 }
 
 pub fn triad(hsl: Hsl) -> (Hsl, Hsl) {
-    let left = (hsl.h + 240) % 360;
-    let right = (hsl.h + 120) % 360;
+    let left = (hsl.h - 120).rem_euclid(360);
+    let right = (hsl.h + 120).rem_euclid(360);
 
     let left = Hsl::new(left, hsl.s, hsl.l);
     let right = Hsl::new(right, hsl.s, hsl.l);
@@ -24,9 +24,9 @@ pub fn triad(hsl: Hsl) -> (Hsl, Hsl) {
 }
 
 pub fn square(hsl: Hsl) -> (Hsl, Hsl, Hsl) {
-    let left = (hsl.h + 90) % 360;
-    let middle = (hsl.h + 180) % 360;
-    let right = (hsl.h + 270) % 360;
+    let left = (hsl.h - 90).rem_euclid(360);
+    let middle = (hsl.h + 180).rem_euclid(360);
+    let right = (hsl.h + 90).rem_euclid(360);
 
     let left = Hsl::new(left, hsl.s, hsl.l);
     let middle = Hsl::new(middle, hsl.s, hsl.l);
@@ -36,8 +36,8 @@ pub fn square(hsl: Hsl) -> (Hsl, Hsl, Hsl) {
 }
 
 pub fn analogous(hsl: Hsl) -> (Hsl, Hsl) {
-    let left = (hsl.h + 30) % 360;
-    let right = (hsl.h + 330) % 360;
+    let left = (hsl.h - 30).rem_euclid(360);
+    let right = (hsl.h + 30).rem_euclid(360);
 
     let left = Hsl::new(left, hsl.s, hsl.l);
     let right = Hsl::new(right, hsl.s, hsl.l);
