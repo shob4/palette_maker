@@ -274,7 +274,19 @@ mod tests {
         let hsl2 = Hsl::new(250, 500, 500);
 
         let result = gradient(hsl1, hsl2, 5);
-        let h_interval = (360 - (250 - 350)) / 5;
+        let h_interval = (250 - 350) / 5;
+
+        let mut expected = 350;
+        for (i, c) in result.iter().enumerate() {
+            expected = (expected + h_interval) % 360;
+            assert_eq!(c.h, expected as u16, "hue wrap mismatch at step {i}");
+        }
+
+        let hsl1 = Hsl::new(350, 500, 500);
+        let hsl2 = Hsl::new(150, 500, 500);
+
+        let result = gradient(hsl1, hsl2, 5);
+        let h_interval = (360 + (150 - 350)) / 5;
 
         let mut expected = 350;
         for (i, c) in result.iter().enumerate() {
