@@ -14,21 +14,21 @@ pub fn complement(hsl: Hsl) -> Hsl {
 }
 
 pub fn triad(hsl: Hsl) -> (Hsl, Hsl) {
-    let left = (hsl.h - 120).rem_euclid(360);
+    let left = (hsl.h as i32 - 120).rem_euclid(360);
     let right = (hsl.h + 120).rem_euclid(360);
 
-    let left = Hsl::new(left, hsl.s, hsl.l);
+    let left = Hsl::new(left as u16, hsl.s, hsl.l);
     let right = Hsl::new(right, hsl.s, hsl.l);
 
     (left, right)
 }
 
 pub fn square(hsl: Hsl) -> (Hsl, Hsl, Hsl) {
-    let left = (hsl.h - 90).rem_euclid(360);
+    let left = (hsl.h as i32 - 90).rem_euclid(360);
     let middle = (hsl.h + 180).rem_euclid(360);
     let right = (hsl.h + 90).rem_euclid(360);
 
-    let left = Hsl::new(left, hsl.s, hsl.l);
+    let left = Hsl::new(left as u16, hsl.s, hsl.l);
     let middle = Hsl::new(middle, hsl.s, hsl.l);
     let right = Hsl::new(right, hsl.s, hsl.l);
 
@@ -36,10 +36,10 @@ pub fn square(hsl: Hsl) -> (Hsl, Hsl, Hsl) {
 }
 
 pub fn analogous(hsl: Hsl) -> (Hsl, Hsl) {
-    let left = (hsl.h - 30).rem_euclid(360);
+    let left = (hsl.h as i32 - 30).rem_euclid(360);
     let right = (hsl.h + 30).rem_euclid(360);
 
-    let left = Hsl::new(left, hsl.s, hsl.l);
+    let left = Hsl::new(left as u16, hsl.s, hsl.l);
     let right = Hsl::new(right, hsl.s, hsl.l);
 
     (left, right)
@@ -214,8 +214,113 @@ mod tests {
     }
 
     #[test]
-    fn test_monochromatic() {}
+    fn test_monochromatic_basic() {
+        let hsl = Hsl::new(120, 500, 300);
+        let result = monochromatic(hsl);
+
+        let expected_l: Vec<u16> = (350..=1000)
+            .step_by(50)
+            .chain((50..300).rev().step_by(50))
+            .collect();
+
+        assert_eq!(result.len(), expected_l.len());
+
+        for (i, l) in expected_l.iter().enumerate() {
+            assert_eq!(result[i].h, 120);
+            assert_eq!(result[i].s, 500);
+            assert_eq!(result[i].l, *l);
+        }
+    }
 
     #[test]
-    fn test_gradient() {}
+    fn test_monochromatic_l_near_bounds() {
+        let hsl = Hsl::new(10, 200, 50);
+        let result = monochromatic(hsl);
+
+        let expected: Vec<u16> = (100..=1000).step_by(50).collect();
+        assert_eq!(result.iter().map(|c| c.l).collect::<Vec<_>>(), expected);
+    }
+
+    #[test]
+    fn test_gradient_basic_linear() {
+        let hsl1 = Hsl::new(100, 200, 300);
+        let hsl2 = Hsl::new(200, 400, 500);
+
+        let result = gradient(hsl1, hsl2, 5);
+        assert_eq!(result.len(), 5);
+
+        let s_interval = (400 - 200) / 5;
+        let l_interval = (500 - 300) / 5;
+        let h_interval = (200 - 100) / 5;
+
+        let mut expected_h = 100;
+        let mut expected_s = 200;
+        let mut expected_l = 300;
+
+        for (i, color) in result.iter().enumerate() {
+            expected_h = (expected_h + h_interval) % 360;
+            expected_s += s_interval;
+            expected_l += l_interval;
+
+            assert_eq!(color.h, expected_h as u16, "hue mismatch at step {i}");
+            assert_eq!(color.s, expected_s as u16, "hue mismatch at step {i}");
+            assert_eq!(color.l, expected_l as u16, "hue mismatch at step {i}");
+        }
+    }
+
+    #[test]
+    fn test_gradient_hue_wrapping_forward() {
+        let hsl1 = Hsl::new(350, 500, 500);
+        let hsl2 = Hsl::new(250, 500, 500);
+
+        let result = gradient(hsl1, hsl2, 5);
+        let h_interval = (360 - (250 - 350)) / 5;
+
+        let mut expected = 350;
+        for (i, c) in result.iter().enumerate() {
+            expected = (expected + h_interval) % 360;
+            assert_eq!(c.h, expected as u16, "hue wrap mismatch at step {i}");
+        }
+    }
+
+    #[test]
+    fn test_gradient_hue_wrapping_backward() {
+        let hsl1 = Hsl::new(10, 500, 500);
+        let hsl2 = Hsl::new(270, 500, 500);
+
+        let result = gradient(hsl1, hsl2, 5);
+        let h_interval = (360 + (10 - 270)) / 5;
+
+        let mut expected = 10;
+        for (i, c) in result.iter().enumerate() {
+            expected = (expected + h_interval) % 360;
+            assert_eq!(
+                c.h, expected as u16,
+                "hue backward wrap mismatch at step {i}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_gradient_saturation_zero_uses_second_hue() {
+        let hsl1 = Hsl::new(180, 0, 300);
+        let hsl2 = Hsl::new(90, 500, 900);
+
+        let result = gradient(hsl1, hsl2, 4);
+
+        let expected = 90;
+
+        for c in result {
+            assert_eq!(c.h, expected as u16);
+        }
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_gradient_asserts() {
+        let hsl1 = Hsl::new(400, 300, 300);
+        let hsl2 = Hsl::new(100, 300, 300);
+
+        gradient(hsl1, hsl2, 5);
+    }
 }
