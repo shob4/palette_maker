@@ -1,12 +1,6 @@
 use crate::color_spaces::{Hsl, Rgb};
 
 // TODO
-// [] tests for analagous
-// [] tests for monochromatic
-// [] change to color?
-// [] return passed hsl/rgb?
-// [] figure out how to make gradients
-//  [] figure out how to go arounda gradient
 
 pub fn complement(hsl: Hsl) -> Hsl {
     let new_h = (hsl.h + 180).rem_euclid(360);
@@ -103,18 +97,12 @@ pub fn gradient(hsl: Hsl, hsl2: Hsl, num: u32) -> Vec<Hsl> {
 }
 
 pub fn three_node_distance_rgb(rgb1: Rgb, rgb2: Rgb) -> u32 {
-    let r = match (rgb1.r as i32 - rgb2.r as i32).checked_pow(2) {
-        Some(val) => val,
-        None => todo!("figure out how to handle overflow"),
-    };
-    let g = match (rgb1.g as i32 - rgb2.g as i32).checked_pow(2) {
-        Some(val) => val,
-        None => todo!("figure out how to handle overflow"),
-    };
-    let b = match (rgb1.b as i32 - rgb2.b as i32).checked_pow(2) {
-        Some(val) => val,
-        None => todo!("figure out how to handle overflow"),
-    };
+    let r = (rgb1.r as i32 - rgb2.r as i32).pow(2);
+
+    let g = (rgb1.g as i32 - rgb2.g as i32).pow(2);
+
+    let b = (rgb1.b as i32 - rgb2.b as i32).pow(2);
+
     let distance = r + g + b;
     distance as u32
 }
