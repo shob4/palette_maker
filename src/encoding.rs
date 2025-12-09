@@ -331,15 +331,17 @@ impl Encoding {
                 for (key, (r, g, b)) in NAMED_COLORS.iter() {
                     let start = Rgb::new(*r, *g, *b);
                     let goal = Rgb::new(rgb.r, rgb.g, rgb.b);
+                    println!("{:?}, {:?}, {:?}", rgb.r, rgb.g, rgb.b);
+                    println!("{:?}, {:?}, {:?}, {key}", start.r, start.g, start.b);
                     if start == goal {
-                        name = Encoding::Name(String::from(*key))
+                        name = Encoding::Name(String::from(*key));
+                        break;
                     } else {
                         let new_distance = three_node_distance_rgb(goal, start);
                         if new_distance < min_distance {
                             println!("new_distance: {new_distance}, min_distance: {min_distance}");
                             min_distance = new_distance;
                             println!("r: {r}, g: {g}, b: {b}");
-                            println!("{:?}", key);
                             name = Encoding::Name(String::from(*key));
                         }
                     }
