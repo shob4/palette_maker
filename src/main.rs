@@ -1,20 +1,14 @@
+use std::io;
+
+use ratatui::DefaultTerminal;
+
 // TODO
-// [] find out how to do color arithmetic
-//  [] complements
-//  [] analogous
-//  [] monochrome
-//  [] split
-//  [] square
-//  [] triadic
-// [] translate color types
-//  [x] to rgb
-//   [] figure out ints as percentages for hsl and hsb
-//  [x] rgb to hsl
-//  [] rgb to name
-//  [x] rgb to hsb
-//  [] rgb to hex
-// [] create error types
-//  [] wrong encoding
+
 fn main() {
-    println!("Hello, world!");
+    fn main() -> io::Result<()> {
+        let mut terminal = ratatui::init();
+        let app_result = App::default().run(&mut terminal);
+        ratatui::restore();
+        app_result
+    }
 }
