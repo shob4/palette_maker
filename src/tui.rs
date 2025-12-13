@@ -5,10 +5,10 @@ use ratatui::{
     Frame,
     buffer::Buffer,
     layout::Rect,
-    style::Stylize,
+    style::{Color, Stylize},
     symbols::border,
-    text::{Line, Text},
-    widgets::{Block, Paragraph, Widget},
+    text::{Line, Span, Text},
+    widgets::{Block, List, ListItem, Paragraph, Widget},
 };
 
 #[derive(Debug, Default)]
@@ -39,6 +39,21 @@ impl App {
 
 impl Widget for &App {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        todo!()
+        let title = Line::from(" Palette Generator".bold());
+        let instructions = Line::from(vec![" Quit ".into(), "<Q>".blue().bold()]);
+        let items: Vec<ListItem> = self
+            .colors
+            .iter()
+            .map(|c| {
+                ListItem::new(Line::from(vec![
+                    Span::styled(" ", Style::default().fg(c.ratatui_text())),
+                    Span::styled(c.hex_to_string(), Style::default().bg(c.ratatui_color())),
+                ]))
+            })
+            .collect();
+        let block = Block::bordered()
+            .title(title.centered())
+            .title_bottom(instructions.centered())
+            .border_set(border::THICK);
     }
 }

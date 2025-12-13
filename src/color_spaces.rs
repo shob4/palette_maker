@@ -134,4 +134,32 @@ impl Color {
             name: name,
         }
     }
+
+    pub fn hex_to_string(&self) -> String {
+        format!("{}", self.hex.h)
+    }
+
+    pub fn rgb_to_string(&self) -> String {
+        format!("{}, {}, {}", self.rgb.r, self.rgb.g, self.rgb.b)
+    }
+
+    pub fn hsl_to_string(&self) -> String {
+        format!("{}, {}, {}", self.hsl.h, self.hsl.s, self.hsl.l)
+    }
+
+    pub fn hsb_to_string(&self) -> String {
+        format!("{}, {}, {}", self.hsb.h, self.hsb.s, self.hsb.b)
+    }
+
+    pub fn ratatui_color(&self) -> ratatui::style::Color {
+        ratatui::style::Color::Rgb(self.rgb.r, self.rgb.g, self.rgb.b)
+    }
+
+    pub fn ratatui_text(&self) -> ratatui::style::Color {
+        if self.hsl.l >= 500 {
+            ratatui::style::Color::Rgb(255, 255, 255)
+        } else {
+            ratatui::style::Color::Rgb(0, 0, 0)
+        }
+    }
 }
