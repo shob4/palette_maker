@@ -2,10 +2,10 @@ use std::io;
 
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
 use ratatui::{
-    Frame,
+    DefaultTerminal, Frame,
     buffer::Buffer,
     layout::Rect,
-    style::{Color, Stylize},
+    style::{Color, Style, Stylize},
     symbols::border,
     text::{Line, Span, Text},
     widgets::{Block, List, ListItem, Paragraph, Widget},
@@ -13,7 +13,7 @@ use ratatui::{
 
 #[derive(Debug, Default)]
 pub struct App {
-    colors: Vec<(crate::color_spaces::Color)>,
+    colors: Vec<crate::color_spaces::Color>,
     exit: bool,
 }
 
@@ -32,15 +32,30 @@ impl App {
 
     fn handle_events(&mut self) -> io::Result<()> {
         match event::read()? {
-            _ => todo!(),
+            Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
+                self.handle_key_event(key_event)
+            }
+            _ => {}
+        };
+        Ok(())
+    }
+
+    fn handle_key_event(&mut self, key_event: KeyEvent) {
+        match key_event.code {
+            KeyCode::Char('q') => self.exit(),
+            _ => {}
         }
+    }
+
+    fn exit(&mut self) {
+        self.exit = true;
     }
 }
 
 impl Widget for &App {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        let title = Line::from(" Palette Generator".bold());
-        let instructions = Line::from(vec![" Quit ".into(), "<Q>".blue().bold()]);
+        let title = Line::from(" Palette Generator ".bold());
+        let instructions = Line::from(vec![" Quit ".into(), "<Q> ".blue().bold()]);
         let items: Vec<ListItem> = self
             .colors
             .iter()
@@ -55,5 +70,6 @@ impl Widget for &App {
             .title(title.centered())
             .title_bottom(instructions.centered())
             .border_set(border::THICK);
+        List::new(items).block(block).render(area, buf);
     }
 }
