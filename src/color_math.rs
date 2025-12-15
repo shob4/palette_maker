@@ -107,6 +107,25 @@ pub fn three_node_distance_rgb(rgb1: Rgb, rgb2: Rgb) -> u32 {
     distance as u32
 }
 
+pub fn n_color_average_complement(nodes: Vec<Rgb>) -> Color {
+    let mut complements = Vec::new();
+    for node in nodes {
+        complements.push(complement(node.encode().get_hsl());
+    }
+    let rgb = complements.pop().encode().get_rgb();
+    let mut r = rgb.r as u32;
+    let mut g = rgb.g as u32;
+    let mut b = rgb.b as u32;
+    for complement in complements {
+        let rgb = complement.encode().get_rgb();
+        r = (r + rgb.r as u32) / 2;
+        g = (r + rgb.g as u32) / 2;
+        b = (r + rgb.b as u32) / 2;
+    }
+
+    Color::new(Rgb::new(r as u8, g as u8, b as u8).encode())
+}
+
 // -----------------------
 
 #[cfg(test)]
