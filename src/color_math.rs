@@ -138,12 +138,60 @@ pub fn generate_color() -> Color {
     Color::new(Hsl::new(h, s, l).encode())
 }
 
+pub fn generate_palette(num: u8) {
+    assert!(num > 0);
+    let mut new_palette = Vec::with_capacity(num as usize);
+    new_palette.push(generate_color());
+    let mut i = 1;
+    if i <= num {
+        new_palette.push(Color::new(complement(&new_palette[0].hsl).encode()));
+        i += 1;
+    }
+    let mut rng = rand::rng();
+    while i <= num {
+        let method = if num - i < 2 {
+            rng.random_range(0..3)
+        } else if num - i < 3 {
+            rng.random_range(0..4)
+        } else {
+            rng.random_range(0..5)
+        };
+        let index = rng.random_range(0..new_palette.len());
+        match method {
+            0 => new_palette.push(Color::new(complement(&new_palette[index].hsl).encode())),
+            1 => new_palette.push(generate_color()),
+            2 => new_palette.push(n_color_average_complement(&new_palette))
+            3 => {
+                let (hsl1, hsl2) = triad(&new_palette[index].hsl);
+                new_palette.push(Color::new(hsl1.encode()));
+                new_palette.push(Color::new(hsl2.encode()));
+                i += 1;
+            }
+            4 => {
+                let (hsl1, hsl2, hsl3) = square(&new_palette[index].hsl);
+                new_palette.push(Color::new(hsl1.encode()));
+                new_palette.push(Color::new(hsl2.encode()));
+                new_palette.push(Color::new(hsl3.encode()));
+                i += 2;
+            }
+            _ => panic!("generate palette from base generated an invalid number")
+        }
+        i += 1;
+    }
+}
+
 pub fn generate_palette_from_base(current_palette: &mut Vec<Color>, num: u8) {
     let mut rng = rand::rng();
     let mut temp_palette = Vec::with_capacity(num as usize);
     let mut i = 0;
     while i < num {
-        let method = rng.random_range(0..5);
+        let method = if num - i < 2 {
+            rng.random_range(0..3)
+        } else if num - i < 3 {
+            rng.random_range(0..4)
+        } else {
+            rng.random_range(0..5)
+        };
         let index = rng.random_range(0..current_palette.len());
         match method {
             0 => temp_palette.push(Color::new(complement(&current_palette[index].hsl).encode())),
@@ -162,7 +210,7 @@ pub fn generate_palette_from_base(current_palette: &mut Vec<Color>, num: u8) {
                 temp_palette.push(Color::new(hsl3.encode()));
                 i += 2;
             }
-            _ => panic!("generate palette generated an invalid number")
+            _ => panic!("generate palette from base generated an invalid number")
         }
         i += 1;
     }
@@ -185,7 +233,7 @@ mod tests {
         ]);
         for (hsl, desired_result) in tests {
             println!("input: {:?}, desired_result: {:?}", hsl, desired_result);
-            let result = complement(hsl);
+            let result = complement(&hsl);
             assert_eq!(result, desired_result);
         }
     }
@@ -202,7 +250,7 @@ mod tests {
                 "input: {:?}, desired_result1: {:?}, desired_result2: {:?}",
                 hsl, desired_result1, desired_result2
             );
-            let results = triad(hsl);
+            let results = triad(&hsl);
             let (result1, result2) = results;
             if !(result1 == desired_result1 && result2 == desired_result2) {
                 panic!("result1: {:?}, result2: {:?}", result1, result2);
@@ -220,7 +268,7 @@ mod tests {
                 "input: {:?}, desired_result1: {:?}, desired_result2: {:?}, desired_result3: {:?}",
                 hsl, desired_result1, desired_result2, desired_result3
             );
-            let results = square(hsl);
+            let results = square(&hsl);
             let (result1, result2, result3) = results;
             if !(result1 == desired_result1
                 && result2 == desired_result2
