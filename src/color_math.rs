@@ -1,4 +1,5 @@
-use crate::color_spaces::{Hsl, Rgb};
+use crate::color_spaces::{Color, Hsl, Rgb};
+use rand::prelude::*;
 
 // TODO
 
@@ -107,12 +108,15 @@ pub fn three_node_distance_rgb(rgb1: Rgb, rgb2: Rgb) -> u32 {
     distance as u32
 }
 
-pub fn n_color_average_complement(nodes: Vec<Rgb>) -> Color {
+pub fn n_color_average_complement(nodes: Vec<Color>) -> Color {
     let mut complements = Vec::new();
     for node in nodes {
-        complements.push(complement(node.encode().get_hsl());
+        complements.push(complement(node.hsl));
     }
-    let rgb = complements.pop().encode().get_rgb();
+    let rgb = match complements.pop() {
+        Some(val) => val.encode().get_rgb(),
+        None => panic!("no colors to complement"),
+    };
     let mut r = rgb.r as u32;
     let mut g = rgb.g as u32;
     let mut b = rgb.b as u32;
@@ -124,6 +128,42 @@ pub fn n_color_average_complement(nodes: Vec<Rgb>) -> Color {
     }
 
     Color::new(Rgb::new(r as u8, g as u8, b as u8).encode())
+}
+
+pub fn generate_color() -> Color {
+    let mut rng = rand::rng();
+    let h = rng.random_range(0..361);
+    let s = rng.random_range(0..1001);
+    let l = rng.random_range(0..1001);
+    Color::new(Hsl::new(h, s, l).encode())
+}
+
+pub fn generate_palette(current_palette: &mut Vec<Color>, num: u8) {
+    let mut rng = rand::rng();
+    let mut temp_palette = Vec::with_capacity(num as usize);
+    for i in [0..num].iter() {
+        let method = rng.random_range(0..5);
+        let index = rng.random_range(0..current_palette.len());
+        match method {
+            0 => temp_palette.push(Color::new(complement(current_palette[index].hsl).encode())),
+            1 => temp_palette.push(generate_color()),
+            2 => temp_palette.push(n_color_average_complement(*current_palette))
+            3 => {
+                let (hsl1, hsl2) = triad(current_palette[index].hsl);
+                temp_palette.push(Color::new(hsl1.encode()));
+                temp_palette.push(Color::new(hsl2.encode()));
+                i.skip(2);
+            }
+            4 => {
+                let (hsl1, hsl2, hsl3) = square(current_palette[index].hsl);
+                temp_palette.push(Color::new(hsl1.encode()));
+                temp_palette.push(Color::new(hsl2.encode()));
+                temp_palette.push(Color::new(hsl3.encode()));
+                i.skip(3);
+            }
+            _ => panic!("generate palette generated an invalid number")
+        }
+    }
 }
 
 // -----------------------
