@@ -3,12 +3,12 @@ use rand::prelude::*;
 
 // TODO
 
-pub fn complement(hsl: Hsl) -> Hsl {
+pub fn complement(hsl: &Hsl) -> Hsl {
     let new_h = (hsl.h + 180).rem_euclid(360);
     Hsl::new(new_h, hsl.s, hsl.l)
 }
 
-pub fn triad(hsl: Hsl) -> (Hsl, Hsl) {
+pub fn triad(hsl: &Hsl) -> (Hsl, Hsl) {
     let left = (hsl.h as i32 - 120).rem_euclid(360);
     let right = (hsl.h + 120).rem_euclid(360);
 
@@ -18,7 +18,7 @@ pub fn triad(hsl: Hsl) -> (Hsl, Hsl) {
     (left, right)
 }
 
-pub fn square(hsl: Hsl) -> (Hsl, Hsl, Hsl) {
+pub fn square(hsl: &Hsl) -> (Hsl, Hsl, Hsl) {
     let left = (hsl.h as i32 - 90).rem_euclid(360);
     let middle = (hsl.h + 180).rem_euclid(360);
     let right = (hsl.h + 90).rem_euclid(360);
@@ -108,10 +108,10 @@ pub fn three_node_distance_rgb(rgb1: Rgb, rgb2: Rgb) -> u32 {
     distance as u32
 }
 
-pub fn n_color_average_complement(nodes: Vec<Color>) -> Color {
+pub fn n_color_average_complement(nodes: &Vec<Color>) -> Color {
     let mut complements = Vec::new();
     for node in nodes {
-        complements.push(complement(node.hsl));
+        complements.push(complement(&node.hsl));
     }
     let rgb = match complements.pop() {
         Some(val) => val.encode().get_rgb(),
@@ -138,32 +138,36 @@ pub fn generate_color() -> Color {
     Color::new(Hsl::new(h, s, l).encode())
 }
 
-pub fn generate_palette(current_palette: &mut Vec<Color>, num: u8) {
+pub fn generate_palette_from_base(current_palette: &mut Vec<Color>, num: u8) {
     let mut rng = rand::rng();
     let mut temp_palette = Vec::with_capacity(num as usize);
-    for i in [0..num].iter() {
+    let mut i = 0;
+    while i < num {
         let method = rng.random_range(0..5);
         let index = rng.random_range(0..current_palette.len());
         match method {
-            0 => temp_palette.push(Color::new(complement(current_palette[index].hsl).encode())),
+            0 => temp_palette.push(Color::new(complement(&current_palette[index].hsl).encode())),
             1 => temp_palette.push(generate_color()),
-            2 => temp_palette.push(n_color_average_complement(*current_palette))
+            2 => temp_palette.push(n_color_average_complement(current_palette))
             3 => {
-                let (hsl1, hsl2) = triad(current_palette[index].hsl);
+                let (hsl1, hsl2) = triad(&current_palette[index].hsl);
                 temp_palette.push(Color::new(hsl1.encode()));
                 temp_palette.push(Color::new(hsl2.encode()));
-                i.skip(2);
+                i += 1;
             }
             4 => {
-                let (hsl1, hsl2, hsl3) = square(current_palette[index].hsl);
+                let (hsl1, hsl2, hsl3) = square(&current_palette[index].hsl);
                 temp_palette.push(Color::new(hsl1.encode()));
                 temp_palette.push(Color::new(hsl2.encode()));
                 temp_palette.push(Color::new(hsl3.encode()));
-                i.skip(3);
+                i += 2;
             }
             _ => panic!("generate palette generated an invalid number")
         }
+        i += 1;
     }
+
+    current_palette.append(&mut temp_palette);
 }
 
 // -----------------------
