@@ -161,10 +161,7 @@ pub fn generate_palette(num: u8) -> Result<(), &'static str> {
             0 => new_palette.push(Color::new(complement(&new_palette[index].hsl).encode())),
             1 => new_palette.push(generate_color()),
             2 => {
-                let new_color = match n_color_average_complement(&new_palette) {
-                    Ok(color) => color,
-                    Err(e) => return Err(e),
-                };
+                let new_color = n_color_average_complement(&new_palette)?;
                 new_palette.push(new_color);
             }
             3 => {
@@ -180,7 +177,7 @@ pub fn generate_palette(num: u8) -> Result<(), &'static str> {
                 new_palette.push(Color::new(hsl3.encode()));
                 i += 2;
             }
-            _ => panic!("generate palette from base generated an invalid number"),
+            _ => return Err("generate palette from base generated an invalid number"),
         }
         i += 1;
     }
@@ -207,10 +204,7 @@ pub fn generate_palette_from_base(
             0 => temp_palette.push(Color::new(complement(&current_palette[index].hsl).encode())),
             1 => temp_palette.push(generate_color()),
             2 => {
-                let new_color = match n_color_average_complement(current_palette) {
-                    Ok(color) => color,
-                    Err(e) => return Err(e),
-                };
+                let new_color = n_color_average_complement(current_palette)?;
                 temp_palette.push(new_color);
             }
             3 => {
@@ -226,7 +220,7 @@ pub fn generate_palette_from_base(
                 temp_palette.push(Color::new(hsl3.encode()));
                 i += 2;
             }
-            _ => panic!("generate palette from base generated an invalid number"),
+            _ => return Err("generate palette from base generated an invalid number"),
         }
         i += 1;
     }
