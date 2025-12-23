@@ -120,35 +120,35 @@ impl PartialEq for Color {
 }
 
 impl Color {
-    pub fn new(code: Encoding) -> Color {
-        let rgb = code.get_rgb();
-        let hsl = code.get_hsl();
-        let hsb = code.get_hsb();
-        let hex = code.get_hex();
-        let name = code.get_name();
-        Color {
+    pub fn new(code: Encoding) -> Result<Color, &'static str> {
+        let rgb = code.get_rgb()?;
+        let hsl = code.get_hsl()?;
+        let hsb = code.get_hsb()?;
+        let hex = code.get_hex()?;
+        let name = code.get_name()?;
+        Ok(Color {
             rgb: rgb,
             hsl: hsl,
             hsb: hsb,
             hex: hex,
             name: name,
-        }
+        })
     }
 
     pub fn hex_to_string(&self) -> String {
-        format!("{}", self.hex.h)
+        format!("{}\n", self.hex.h)
     }
 
     pub fn rgb_to_string(&self) -> String {
-        format!("{}, {}, {}", self.rgb.r, self.rgb.g, self.rgb.b)
+        format!("{},{},{}\n", self.rgb.r, self.rgb.g, self.rgb.b)
     }
 
     pub fn hsl_to_string(&self) -> String {
-        format!("{}, {}, {}", self.hsl.h, self.hsl.s, self.hsl.l)
+        format!("{},{},{}\n", self.hsl.h, self.hsl.s, self.hsl.l)
     }
 
     pub fn hsb_to_string(&self) -> String {
-        format!("{}, {}, {}", self.hsb.h, self.hsb.s, self.hsb.b)
+        format!("{},{},{}\n", self.hsb.h, self.hsb.s, self.hsb.b)
     }
 
     pub fn ratatui_color(&self) -> ratatui::style::Color {

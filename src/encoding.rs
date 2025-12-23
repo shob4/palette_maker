@@ -154,7 +154,11 @@ impl Encoding {
                     delta / (1.0 - (2.0 * (l / 1000.0) - 1.0).abs())
                 };
 
-                Ok(Encoding::Hsl(h.round() as u16, s.round() as u16, l.round() as u16))
+                Ok(Encoding::Hsl(
+                    h.round() as u16,
+                    s.round() as u16,
+                    l.round() as u16,
+                ))
             }
             Encoding::Hsl(h, s, l) => Ok(Encoding::Hsl(*h, *s, *l)),
             Encoding::Name(name) => {
@@ -218,7 +222,11 @@ impl Encoding {
                     delta / (1.0 - (2.0 * (l / 1000.0) - 1.0).abs())
                 };
 
-                Ok(Encoding::Hsl(h.round() as u16, s.round() as u16, l.round() as u16))
+                Ok(Encoding::Hsl(
+                    h.round() as u16,
+                    s.round() as u16,
+                    l.round() as u16,
+                ))
             }
         }
     }
@@ -254,7 +262,11 @@ impl Encoding {
                 };
                 let b = c_max;
 
-                Ok(Encoding::Hsb(h.round() as u16, s.round() as u16, b.round() as u16))
+                Ok(Encoding::Hsb(
+                    h.round() as u16,
+                    s.round() as u16,
+                    b.round() as u16,
+                ))
             }
             Encoding::Hsl(h, s, l) => {
                 assert!(*h <= 360);
@@ -306,7 +318,11 @@ impl Encoding {
                 };
                 let b = c_max;
 
-                Ok(Encoding::Hsb(h.round() as u16, s.round() as u16, b.round() as u16))
+                Ok(Encoding::Hsb(
+                    h.round() as u16,
+                    s.round() as u16,
+                    b.round() as u16,
+                ))
             }
         }
     }
@@ -315,9 +331,9 @@ impl Encoding {
 
     fn rgb_to_hex(&self) -> Result<Encoding, &'static str> {
         match self {
-            Encoding::Rgb(r, g, b) => {
-                Ok(Encoding::Hex((*r as u32) << 16 | (*g as u32) << 8 | (*b as u32)))
-            }
+            Encoding::Rgb(r, g, b) => Ok(Encoding::Hex(
+                (*r as u32) << 16 | (*g as u32) << 8 | (*b as u32),
+            )),
             _ => return Err("wrong encoding type"),
         }
     }
@@ -425,7 +441,7 @@ impl Encoding {
 
     // -----------------------
 
-    pub fn get_name(&self) -> Result<String, &;static str> {
+    pub fn get_name(&self) -> Result<String, &'static str> {
         match self {
             Encoding::Name(n) => String::from(n),
             _ => {
