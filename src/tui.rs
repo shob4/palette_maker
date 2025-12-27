@@ -11,6 +11,12 @@ use ratatui::{
     widgets::{Block, List, ListItem, Paragraph, Widget},
 };
 
+use crate::color_spaces::Color as dis_color;
+use crate::{
+    color_math::generate_palette,
+    file::{load_palette, save_palette},
+};
+
 #[derive(Debug, Default)]
 pub struct App {
     colors: Vec<crate::color_spaces::Color>,
@@ -19,10 +25,12 @@ pub struct App {
 
 impl App {
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
+        self.startup();
         while !self.exit {
             terminal.draw(|frame| self.draw(frame))?;
             self.handle_events()?;
         }
+        self.shutdown(palette);
         Ok(())
     }
 
@@ -50,6 +58,26 @@ impl App {
     fn exit(&mut self) {
         self.exit = true;
     }
+
+    fn startup(&mut self) -> Vec<dis_color> {
+        let start_palette = match load_palette("cache") {
+            Ok(palette) => palette,
+            Err(_) => match generate_palette(5) {
+                Ok(palette) => palette,
+                Err(_) => todo!(),
+            },
+        };
+
+        start_palette
+    }
+
+    fn shutdown(&mut self, palette: Vec<dis_color>) {
+        match save_palette("cache", palette) {
+            Ok(()) => (),
+            Err(_) => todo!(),
+        }
+    }
+    fn handle_error(&mut self, error: &'static str) {}
 }
 
 impl Widget for &App {

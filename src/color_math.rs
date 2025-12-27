@@ -138,7 +138,7 @@ pub fn generate_color() -> Result<Color, &'static str> {
     Ok(Color::new(Hsl::new(h, s, l).encode())?)
 }
 
-pub fn generate_palette(num: u8) -> Result<(), &'static str> {
+pub fn generate_palette(num: u8) -> Result<Vec<Color>, &'static str> {
     assert!(num > 0);
     let mut new_palette = Vec::with_capacity(num as usize);
     new_palette.push(generate_color()?);
@@ -181,7 +181,7 @@ pub fn generate_palette(num: u8) -> Result<(), &'static str> {
         }
         i += 1;
     }
-    Ok(())
+    Ok(new_palette)
 }
 
 pub fn generate_palette_from_base(

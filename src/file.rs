@@ -3,7 +3,7 @@ use std::error::Error;
 use std::fs::File;
 use std::io::prelude::*;
 
-fn load_palette(palette_name: &str) -> Result<Vec<Color>, Box<dyn Error>> {
+pub fn load_palette(palette_name: &str) -> Result<Vec<Color>, Box<dyn Error>> {
     let mut palette = Vec::new();
 
     let mut file = File::open(palette_name)?;
@@ -24,7 +24,7 @@ fn load_palette(palette_name: &str) -> Result<Vec<Color>, Box<dyn Error>> {
     Ok(palette)
 }
 
-fn save_palette(palette_name: &str, palette: Vec<Color>) -> Result<(), Box<dyn Error>> {
+pub fn save_palette(palette_name: &str, palette: Vec<Color>) -> Result<(), Box<dyn Error>> {
     let mut file = match File::open(palette_name) {
         Ok(file) => file,
         Err(_) => File::create(palette_name)?,
@@ -38,12 +38,49 @@ fn save_palette(palette_name: &str, palette: Vec<Color>) -> Result<(), Box<dyn E
 
 // --------------------------
 
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::color_spaces::{Color, Hex};
 
-//     #[test]
-//     fn test_save_palette() {
-//         let palette = Vec::from([]);
-//     }
-// }
+    #[test]
+    fn test_save_palette() {
+        let palette = Vec::from([
+            Color::new(Hex::new(0xf2d7ee).encode()),
+            Color::new(Hex::new(0xd3bcc0).encode()),
+            Color::new(Hex::new(0x69306d).encode()),
+            Color::new(Hex::new(0x0e103d).encode()),
+            Color::new(Hex::new(0xe83151).encode()),
+        ]);
+        let result_palette = match palette.into_iter().collect() {
+            Ok(vec) => vec,
+            Err(e) => panic!("{e}"),
+        };
+
+        match save_palette("test", result_palette) {
+            Ok(_) => return,
+            Err(e) => panic!("{e}"),
+        };
+    }
+
+    #[test]
+    fn test_load_palette() {
+        let palette = Vec::from([
+            Color::new(Hex::new(0xf2d7ee).encode()),
+            Color::new(Hex::new(0xd3bcc0).encode()),
+            Color::new(Hex::new(0x69306d).encode()),
+            Color::new(Hex::new(0x0e103d).encode()),
+            Color::new(Hex::new(0xe83151).encode()),
+        ]);
+        let result_palette = match palette.into_iter().collect() {
+            Ok(vec) => vec,
+            Err(e) => panic!("{e}"),
+        };
+
+        let test_palette = match load_palette("test") {
+            Ok(vec) => vec,
+            Err(e) => panic!("{e}"),
+        };
+        assert_eq!(test_palette, result_palette);
+    }
+}
