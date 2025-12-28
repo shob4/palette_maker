@@ -25,7 +25,7 @@ pub struct App {
 
 impl App {
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
-        self.startup();
+        let palette = self.startup();
         while !self.exit {
             terminal.draw(|frame| self.draw(frame))?;
             self.handle_events()?;
@@ -51,7 +51,7 @@ impl App {
     fn handle_key_event(&mut self, key_event: KeyEvent) {
         match key_event.code {
             KeyCode::Char('q') => self.exit(),
-            _ => {}
+            _ => todo!(),
         }
     }
 
@@ -77,7 +77,9 @@ impl App {
             Err(_) => todo!(),
         }
     }
-    fn handle_error(&mut self, error: &'static str) {}
+    fn handle_error(&mut self, _error: &'static str) {
+        todo!()
+    }
 }
 
 impl Widget for &App {

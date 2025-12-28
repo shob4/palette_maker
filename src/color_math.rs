@@ -121,7 +121,7 @@ pub fn n_color_average_complement(nodes: &Vec<Color>) -> Result<Color, &'static 
     let mut g = rgb.g as u32;
     let mut b = rgb.b as u32;
     for complement in complements {
-        let rgb = complement.encode().get_rgb();
+        let rgb = complement.encode().get_rgb()?;
         r = (r + rgb.r as u32) / 2;
         g = (r + rgb.g as u32) / 2;
         b = (r + rgb.b as u32) / 2;

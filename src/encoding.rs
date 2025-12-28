@@ -340,11 +340,11 @@ impl Encoding {
 
     // -----------------------
 
-    fn translate_to_name(&self) -> Encoding {
+    fn translate_to_name(&self) -> Result<Encoding, &'static str> {
         match self {
-            Encoding::Name(name) => Encoding::Name(name.to_string()),
+            Encoding::Name(name) => Ok(Encoding::Name(name.to_string())),
             _ => {
-                let rgb = self.get_rgb();
+                let rgb = self.get_rgb()?;
                 let mut name: Encoding = Encoding::Rgb(0, 0, 0);
                 let mut min_distance = u32::MAX;
                 for (key, (r, g, b)) in NAMED_COLORS.iter() {
@@ -361,7 +361,7 @@ impl Encoding {
                         }
                     }
                 }
-                name
+                Ok(name)
             }
         }
     }
@@ -443,11 +443,11 @@ impl Encoding {
 
     pub fn get_name(&self) -> Result<String, &'static str> {
         match self {
-            Encoding::Name(n) => String::from(n),
+            Encoding::Name(n) => Ok(String::from(n)),
             _ => {
-                let name = &self.translate_to_name();
+                let name = &self.translate_to_name()?;
                 match name {
-                    Encoding::Name(n) => String::from(n),
+                    Encoding::Name(n) => Ok(String::from(n)),
                     _ => return Err("could not translate to name"),
                 }
             }
