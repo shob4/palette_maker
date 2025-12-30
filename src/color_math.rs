@@ -108,14 +108,14 @@ pub fn three_node_distance_rgb(rgb1: Rgb, rgb2: Rgb) -> u32 {
     distance as u32
 }
 
-pub fn n_color_average_complement(nodes: &Vec<Color>) -> Result<Color, &'static str> {
+pub fn n_color_average_complement(nodes: &Vec<Color>) -> Result<Color, Box<dyn std::error::Error>> {
     let mut complements: Vec<Hsl> = Vec::new();
     for node in nodes {
         complements.push(complement(&node.hsl));
     }
     let rgb = match complements.pop() {
         Some(val) => val.encode().get_rgb()?,
-        None => return Err("no colors to complement"),
+        None => return Err(Box::new("no colors to complement")),
     };
     let mut r = rgb.r as u32;
     let mut g = rgb.g as u32;
@@ -130,7 +130,7 @@ pub fn n_color_average_complement(nodes: &Vec<Color>) -> Result<Color, &'static 
     Ok(Color::new(Rgb::new(r as u8, g as u8, b as u8).encode())?)
 }
 
-pub fn generate_color() -> Result<Color, &'static str> {
+pub fn generate_color() -> Result<Color, Box<dyn std::error::Error>> {
     let mut rng = rand::rng();
     let h = rng.random_range(0..361);
     let s = rng.random_range(0..1001);
@@ -138,7 +138,7 @@ pub fn generate_color() -> Result<Color, &'static str> {
     Ok(Color::new(Hsl::new(h, s, l).encode())?)
 }
 
-pub fn generate_palette(num: u8) -> Result<Vec<Color>, &'static str> {
+pub fn generate_palette(num: u8) -> Result<Vec<Color>, Box<dyn std::error::Error>> {
     assert!(num > 0);
     let mut new_palette = Vec::with_capacity(num as usize);
     new_palette.push(generate_color()?);
@@ -187,7 +187,7 @@ pub fn generate_palette(num: u8) -> Result<Vec<Color>, &'static str> {
 pub fn generate_palette_from_base(
     current_palette: &mut Vec<Color>,
     num: u8,
-) -> Result<(), &'static str> {
+) -> Result<(), Box<dyn std::error::Error>> {
     let mut rng = rand::rng();
     let mut temp_palette = Vec::with_capacity(num as usize);
     let mut i = 0;

@@ -64,7 +64,7 @@ impl App {
             Ok(palette) => palette,
             Err(_) => match generate_palette(5) {
                 Ok(palette) => palette,
-                Err(_) => todo!(),
+                Err(e) => self.handle_error(e),
             },
         };
 
@@ -74,10 +74,10 @@ impl App {
     fn shutdown(&mut self, palette: Vec<dis_color>) {
         match save_palette("cache", palette) {
             Ok(()) => (),
-            Err(_) => todo!(),
+            Err(e) => self.handle_error(e),
         }
     }
-    fn handle_error(&mut self, _error: &'static str) {
+    fn handle_error(&mut self, _error: Box<dyn std::error::Error>) {
         todo!()
     }
 }
