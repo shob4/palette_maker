@@ -1,4 +1,4 @@
-use crate::encoding::Encoding;
+use crate::{encoding::Encoding, error::PaletteError};
 
 // TODO
 
@@ -120,7 +120,7 @@ impl PartialEq for Color {
 }
 
 impl Color {
-    pub fn new(code: Encoding) -> Result<Color, Box<dyn std::error::Error>> {
+    pub fn new(code: Encoding) -> Result<Color, PaletteError> {
         let rgb = code.get_rgb()?;
         let hsl = code.get_hsl()?;
         let hsb = code.get_hsb()?;

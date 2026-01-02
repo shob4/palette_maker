@@ -1,9 +1,9 @@
 use crate::color_spaces::{Color, Rgb};
-use std::error::Error;
+use crate::error::PaletteError;
 use std::fs::File;
 use std::io::prelude::*;
 
-pub fn load_palette(palette_name: &str) -> Result<Vec<Color>, Box<dyn Error>> {
+pub fn load_palette(palette_name: &str) -> Result<Vec<Color>, PaletteError> {
     let mut palette = Vec::new();
 
     let mut file = File::open(palette_name)?;
@@ -24,7 +24,7 @@ pub fn load_palette(palette_name: &str) -> Result<Vec<Color>, Box<dyn Error>> {
     Ok(palette)
 }
 
-pub fn save_palette(palette_name: &str, palette: Vec<Color>) -> Result<(), Box<dyn Error>> {
+pub fn save_palette(palette_name: &str, palette: Vec<Color>) -> Result<(), PaletteError> {
     let mut file = match File::open(palette_name) {
         Ok(file) => file,
         Err(_) => File::create(palette_name)?,

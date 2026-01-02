@@ -1,4 +1,7 @@
-use crate::color_spaces::{Color, Hsl, Rgb};
+use crate::{
+    color_spaces::{Color, Hsl, Rgb},
+    error::PaletteError,
+};
 use rand::prelude::*;
 
 // TODO
@@ -108,14 +111,18 @@ pub fn three_node_distance_rgb(rgb1: Rgb, rgb2: Rgb) -> u32 {
     distance as u32
 }
 
-pub fn n_color_average_complement(nodes: &Vec<Color>) -> Result<Color, Box<dyn std::error::Error>> {
+pub fn n_color_average_complement(nodes: &Vec<Color>) -> Result<Color, PaletteError> {
     let mut complements: Vec<Hsl> = Vec::new();
     for node in nodes {
         complements.push(complement(&node.hsl));
     }
     let rgb = match complements.pop() {
         Some(val) => val.encode().get_rgb()?,
-        None => return Err(Box::new("no colors to complement")),
+        None => {
+            return Err(PaletteError::InvalidFormat(
+                "no colors to complement".to_string(),
+            ));
+        }
     };
     let mut r = rgb.r as u32;
     let mut g = rgb.g as u32;
@@ -130,7 +137,7 @@ pub fn n_color_average_complement(nodes: &Vec<Color>) -> Result<Color, Box<dyn s
     Ok(Color::new(Rgb::new(r as u8, g as u8, b as u8).encode())?)
 }
 
-pub fn generate_color() -> Result<Color, Box<dyn std::error::Error>> {
+pub fn generate_color() -> Result<Color, PaletteError> {
     let mut rng = rand::rng();
     let h = rng.random_range(0..361);
     let s = rng.random_range(0..1001);
@@ -138,7 +145,7 @@ pub fn generate_color() -> Result<Color, Box<dyn std::error::Error>> {
     Ok(Color::new(Hsl::new(h, s, l).encode())?)
 }
 
-pub fn generate_palette(num: u8) -> Result<Vec<Color>, Box<dyn std::error::Error>> {
+pub fn generate_palette(num: u8) -> Result<Vec<Color>, PaletteError> {
     assert!(num > 0);
     let mut new_palette = Vec::with_capacity(num as usize);
     new_palette.push(generate_color()?);
@@ -177,7 +184,11 @@ pub fn generate_palette(num: u8) -> Result<Vec<Color>, Box<dyn std::error::Error
                 new_palette.push(Color::new(hsl3.encode())?);
                 i += 2;
             }
-            _ => return Err("generate palette from base generated an invalid number"),
+            _ => {
+                return Err(PaletteError::UntranslatableEncoding(
+                    "generate palette from base generated an invalid number".to_string(),
+                ));
+            }
         }
         i += 1;
     }
@@ -187,7 +198,7 @@ pub fn generate_palette(num: u8) -> Result<Vec<Color>, Box<dyn std::error::Error
 pub fn generate_palette_from_base(
     current_palette: &mut Vec<Color>,
     num: u8,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<(), PaletteError> {
     let mut rng = rand::rng();
     let mut temp_palette = Vec::with_capacity(num as usize);
     let mut i = 0;
@@ -222,7 +233,11 @@ pub fn generate_palette_from_base(
                 temp_palette.push(Color::new(hsl3.encode())?);
                 i += 2;
             }
-            _ => return Err("generate palette from base generated an invalid number"),
+            _ => {
+                return Err(PaletteError::InvalidFormat(
+                    "generate palette from base generated an invalid random number".to_string(),
+                ));
+            }
         }
         i += 1;
     }

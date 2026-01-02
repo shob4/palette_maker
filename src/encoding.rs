@@ -1,6 +1,6 @@
-use crate::color_math::three_node_distance_rgb;
 use crate::color_spaces::*;
 use crate::named_colors::NAMED_COLORS;
+use crate::{color_math::three_node_distance_rgb, error::PaletteError};
 use std::cmp::{max, min};
 
 #[derive(Hash, Eq, Debug)]
@@ -34,7 +34,7 @@ impl PartialEq for Encoding {
 // -----------------------
 
 impl Encoding {
-    fn translate_to_rgb(&self) -> Result<Encoding, &'static str> {
+    fn translate_to_rgb(&self) -> Result<Encoding, PaletteError> {
         match self {
             Encoding::Rgb(r, g, b) => Ok(Encoding::Rgb(*r, *g, *b)),
 
@@ -73,7 +73,11 @@ impl Encoding {
             Encoding::Name(name) => {
                 let (r, g, b) = match NAMED_COLORS.get(name.as_str()) {
                     Some(rgb) => *rgb,
-                    None => return Err("failed to get rgb from {name}"),
+                    None => {
+                        return Err(PaletteError::UntranslatableEncoding(
+                            "failed to get rgb from {name}".to_string(),
+                        ));
+                    }
                 };
                 Ok(Encoding::Rgb(r, g, b))
             }
@@ -122,7 +126,7 @@ impl Encoding {
 
     // -----------------------
 
-    fn translate_to_hsl(&self) -> Result<Encoding, &'static str> {
+    fn translate_to_hsl(&self) -> Result<Encoding, PaletteError> {
         match self {
             Encoding::Rgb(r, g, b) => {
                 let r = ((*r as f32 / 255.0) * 1000.0).round();
@@ -145,7 +149,9 @@ impl Encoding {
                 } else if c_max == b {
                     60.0 * ((r - g) / delta + 4.0)
                 } else {
-                    return Err("c_max ({c_max}) does not match r ({r}), g ({g}), or b ({b})");
+                    return Err(PaletteError::UntranslatableEncoding(
+                        "c_max ({c_max}) does not match r ({r}), g ({g}), or b ({b})".to_string(),
+                    ));
                 };
 
                 let s = if delta == 0.0 {
@@ -164,7 +170,11 @@ impl Encoding {
             Encoding::Name(name) => {
                 let (r, g, b) = match NAMED_COLORS.get(name.as_str()) {
                     Some(rgb) => *rgb,
-                    None => return Err("failed to get rgb from {name}"),
+                    None => {
+                        return Err(PaletteError::UntranslatableEncoding(
+                            "failed to get rgb from {name}".to_string(),
+                        ));
+                    }
                 };
                 match Encoding::Rgb(r, g, b).translate_to_hsl() {
                     Ok(hsl) => Ok(hsl),
@@ -213,7 +223,9 @@ impl Encoding {
                 } else if c_max == b {
                     60.0 * ((r - g) / delta + 4.0)
                 } else {
-                    return Err("c_max ({c_max}) does not match r ({r}), g ({g}), or b ({b})");
+                    return Err(PaletteError::UntranslatableEncoding(
+                        "c_max ({c_max}) does not match r ({r}), g ({g}), or b ({b})".to_string(),
+                    ));
                 };
 
                 let s = if delta == 0.0 {
@@ -233,7 +245,7 @@ impl Encoding {
 
     // -----------------------
 
-    fn translate_to_hsb(&self) -> Result<Encoding, &'static str> {
+    fn translate_to_hsb(&self) -> Result<Encoding, PaletteError> {
         match self {
             Encoding::Rgb(r, g, b) => {
                 let red = ((*r as f32 / 255.0) * 1000.0).round();
@@ -281,7 +293,11 @@ impl Encoding {
             Encoding::Name(name) => {
                 let (r, g, b) = match NAMED_COLORS.get(name.as_str()) {
                     Some(rgb) => *rgb,
-                    None => return Err("failed to get rgb from {name}"),
+                    None => {
+                        return Err(PaletteError::UntranslatableEncoding(
+                            "failed to get rgb from {name}".to_string(),
+                        ));
+                    }
                 };
                 Encoding::Rgb(r, g, b).translate_to_hsb()
             }
@@ -329,18 +345,22 @@ impl Encoding {
 
     // -----------------------
 
-    fn rgb_to_hex(&self) -> Result<Encoding, &'static str> {
+    fn rgb_to_hex(&self) -> Result<Encoding, PaletteError> {
         match self {
             Encoding::Rgb(r, g, b) => Ok(Encoding::Hex(
                 (*r as u32) << 16 | (*g as u32) << 8 | (*b as u32),
             )),
-            _ => return Err("wrong encoding type"),
+            _ => {
+                return Err(PaletteError::UntranslatableEncoding(
+                    "wrong encoding type".to_string(),
+                ));
+            }
         }
     }
 
     // -----------------------
 
-    fn translate_to_name(&self) -> Result<Encoding, &'static str> {
+    fn translate_to_name(&self) -> Result<Encoding, PaletteError> {
         match self {
             Encoding::Name(name) => Ok(Encoding::Name(name.to_string())),
             _ => {
@@ -368,14 +388,18 @@ impl Encoding {
 
     // -----------------------
 
-    pub fn get_rgb(&self) -> Result<Rgb, &'static str> {
+    pub fn get_rgb(&self) -> Result<Rgb, PaletteError> {
         match self {
             Encoding::Rgb(r, g, b) => Ok(Rgb::new(*r, *g, *b)),
             _ => {
                 let rgb = self.translate_to_rgb()?;
                 match rgb {
                     Encoding::Rgb(r, g, b) => Ok(Rgb::new(r, g, b)),
-                    _ => return Err("could not translate to rgb"),
+                    _ => {
+                        return Err(PaletteError::UntranslatableEncoding(
+                            "could not translate to rgb".to_string(),
+                        ));
+                    }
                 }
             }
         }
@@ -383,14 +407,18 @@ impl Encoding {
 
     // -----------------------
 
-    pub fn get_hsl(&self) -> Result<Hsl, &'static str> {
+    pub fn get_hsl(&self) -> Result<Hsl, PaletteError> {
         match self {
             Encoding::Hsl(h, s, l) => Ok(Hsl::new(*h, *s, *l)),
             _ => {
                 let hsl = self.translate_to_hsl()?;
                 match hsl {
                     Encoding::Hsl(h, s, l) => Ok(Hsl::new(h, s, l)),
-                    _ => return Err("could not translate to hsl"),
+                    _ => {
+                        return Err(PaletteError::UntranslatableEncoding(
+                            "could not translate to hsl".to_string(),
+                        ));
+                    }
                 }
             }
         }
@@ -398,14 +426,18 @@ impl Encoding {
 
     // -----------------------
 
-    pub fn get_hsb(&self) -> Result<Hsb, &'static str> {
+    pub fn get_hsb(&self) -> Result<Hsb, PaletteError> {
         match self {
             Encoding::Hsb(h, s, b) => Ok(Hsb::new(*h, *s, *b)),
             _ => {
                 let hsb = self.translate_to_hsb()?;
                 match hsb {
                     Encoding::Hsl(h, s, b) => Ok(Hsb::new(h, s, b)),
-                    _ => return Err("could not translate to hsb"),
+                    _ => {
+                        return Err(PaletteError::UntranslatableEncoding(
+                            "could not translate to hsb".to_string(),
+                        ));
+                    }
                 }
             }
         }
@@ -413,14 +445,18 @@ impl Encoding {
 
     // -----------------------
 
-    pub fn get_hex(&self) -> Result<Hex, &'static str> {
+    pub fn get_hex(&self) -> Result<Hex, PaletteError> {
         match self {
             Encoding::Hex(h) => Ok(Hex::new(*h)),
             Encoding::Rgb(_, _, _) => {
                 let hex = self.rgb_to_hex()?;
                 match hex {
                     Encoding::Hex(h) => Ok(Hex::new(h)),
-                    _ => return Err("could not translate rgb to hex"),
+                    _ => {
+                        return Err(PaletteError::UntranslatableEncoding(
+                            "could not translate rgb to hex".to_string(),
+                        ));
+                    }
                 }
             }
             _ => {
@@ -430,10 +466,18 @@ impl Encoding {
                         let hex = self.rgb_to_hex()?;
                         match hex {
                             Encoding::Hex(h) => Ok(Hex::new(h)),
-                            _ => return Err("could not translate rgb to hex"),
+                            _ => {
+                                return Err(PaletteError::UntranslatableEncoding(
+                                    "could not translate rgb to hex".to_string(),
+                                ));
+                            }
                         }
                     }
-                    _ => return Err("could not translate to rgb"),
+                    _ => {
+                        return Err(PaletteError::UntranslatableEncoding(
+                            "could not translate to rgb".to_string(),
+                        ));
+                    }
                 }
             }
         }
@@ -441,14 +485,18 @@ impl Encoding {
 
     // -----------------------
 
-    pub fn get_name(&self) -> Result<String, &'static str> {
+    pub fn get_name(&self) -> Result<String, PaletteError> {
         match self {
             Encoding::Name(n) => Ok(String::from(n)),
             _ => {
                 let name = &self.translate_to_name()?;
                 match name {
                     Encoding::Name(n) => Ok(String::from(n)),
-                    _ => return Err("could not translate to name"),
+                    _ => {
+                        return Err(PaletteError::UntranslatableEncoding(
+                            "could not translate to name".to_string(),
+                        ));
+                    }
                 }
             }
         }
