@@ -11,8 +11,16 @@ pub fn load_palette(palette_name: &str) -> Result<Vec<Color>, PaletteError> {
     let mut contents = String::new();
     file.read_to_string(&mut contents)?;
 
-    for line in contents.lines() {
+    for (line_num, line) in contents.lines().enumerate() {
         let rgb: Vec<&str> = line.split(",").collect();
+
+        if rgb.len() != 3 {
+            return Err(PaletteError::InvalidFormat(format!(
+                "Line {}: expected 3 values, got {}",
+                line_num + 1,
+                rgb.len()
+            )));
+        }
 
         let r: u8 = rgb[0].trim().parse()?;
         let g: u8 = rgb[1].trim().parse()?;

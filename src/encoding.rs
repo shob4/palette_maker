@@ -523,7 +523,11 @@ mod tests {
 
         for (encoding, name) in tests {
             println!("input: {:?}, desired result: {:?}", encoding, name);
-            assert_eq!(encoding.get_name(), name);
+            let result = match encoding.get_name() {
+                Ok(name) => name,
+                Err(e) => panic!("{e}"),
+            };
+            assert_eq!(result, name);
         }
     }
 
@@ -540,7 +544,11 @@ mod tests {
 
         for (encoding, rgb) in tests {
             println!("input: {:?}, desired result: {:?}", encoding, rgb);
-            assert_eq!(encoding.get_rgb(), rgb);
+            let result = match encoding.get_rgb() {
+                Ok(rgb) => rgb,
+                Err(e) => panic!("{e}"),
+            };
+            assert_eq!(result, rgb);
         }
     }
 }

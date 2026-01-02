@@ -11,9 +11,10 @@ use ratatui::{
     widgets::{Block, List, ListItem, Paragraph, Widget},
 };
 
-use crate::color_spaces::Color as dis_color;
 use crate::{
     color_math::generate_palette,
+    color_spaces::Color as dis_color,
+    error::PaletteError,
     file::{load_palette, save_palette},
 };
 
@@ -25,7 +26,10 @@ pub struct App {
 
 impl App {
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
-        let palette = self.startup();
+        let palette = match self.startup() {
+            Ok(palette) => palette,
+            Err(e) => self.handle_palette_error(e),
+        };
         while !self.exit {
             terminal.draw(|frame| self.draw(frame))?;
             self.handle_events()?;
@@ -59,7 +63,7 @@ impl App {
         self.exit = true;
     }
 
-    fn startup(&mut self) -> Result<Vec<dis_color>, Box<dyn std::error::Error>> {
+    fn startup(&mut self) -> Result<Vec<dis_color>, PaletteError> {
         let start_palette = match load_palette("cache") {
             Ok(palette) => palette,
             Err(_) => generate_palette(5)?,
@@ -71,14 +75,42 @@ impl App {
     fn shutdown(&mut self, palette: Vec<dis_color>) {
         match save_palette("cache", palette) {
             Ok(()) => (),
-            Err(e) => self.handle_error(e),
+            Err(e) => self.handle_shutdown_error(e),
         }
     }
 
-    fn handle_error(&mut self, error: Box<dyn std::error::Error>) {
-        println!("{error}");
+    fn handle_palette_error(&mut self, error: PaletteError) -> Vec<dis_color> {
         match error {
-            _ => (),
+            PaletteError::Io(e) => {
+                println!("failed to open file: {e}");
+                println!("try again? open another file?");
+                Vec::new()
+            }
+            PaletteError::Parse(e) => {
+                println!("failed to parse text: {e}");
+                // TODO figure out possible recovery methods
+                // open another file
+                // generate random palette
+                Vec::new()
+            }
+            PaletteError::InvalidFormat(e) => {
+                println!("the color data was malformed: {e}");
+                // TODO figure out possible recovery methods
+                // open another file
+                // generate random palette
+                Vec::new()
+            }
+            PaletteError::UntranslatableEncoding(e) => {
+                println!("unable to translate: {e}");
+                // TODO figure out possible recovery methods
+                Vec::new()
+            }
+        }
+    }
+
+    fn handle_shutdown_error(&mut self, error: PaletteError) {
+        match error {
+            _ => println!("{error}"),
         }
     }
 }
