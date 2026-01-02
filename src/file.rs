@@ -30,7 +30,7 @@ pub fn save_palette(palette_name: &str, palette: Vec<Color>) -> Result<(), Box<d
         Err(_) => File::create(palette_name)?,
     };
     for color in palette {
-        file.write(color.rgb_to_string().as_bytes());
+        file.write(color.rgb_to_string().as_bytes())?;
     }
 
     Ok(())

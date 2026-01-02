@@ -59,16 +59,13 @@ impl App {
         self.exit = true;
     }
 
-    fn startup(&mut self) -> Vec<dis_color> {
+    fn startup(&mut self) -> Result<Vec<dis_color>, Box<dyn std::error::Error>> {
         let start_palette = match load_palette("cache") {
             Ok(palette) => palette,
-            Err(_) => match generate_palette(5) {
-                Ok(palette) => palette,
-                Err(e) => self.handle_error(e),
-            },
+            Err(_) => generate_palette(5)?,
         };
 
-        start_palette
+        Ok(start_palette)
     }
 
     fn shutdown(&mut self, palette: Vec<dis_color>) {
@@ -77,8 +74,12 @@ impl App {
             Err(e) => self.handle_error(e),
         }
     }
-    fn handle_error(&mut self, _error: Box<dyn std::error::Error>) {
-        todo!()
+
+    fn handle_error(&mut self, error: Box<dyn std::error::Error>) {
+        println!("{error}");
+        match error {
+            _ => (),
+        }
     }
 }
 
