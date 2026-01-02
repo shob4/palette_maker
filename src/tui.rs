@@ -4,7 +4,7 @@ use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
 use ratatui::{
     DefaultTerminal, Frame,
     buffer::Buffer,
-    layout::Rect,
+    layout::{Constraint, Rect},
     style::{Color, Style, Stylize},
     symbols::border,
     text::{Line, Span, Text},
@@ -22,13 +22,17 @@ use crate::{
 pub struct App {
     colors: Vec<crate::color_spaces::Color>,
     exit: bool,
+    error: Option<PaletteError>,
 }
 
 impl App {
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
         let palette = match self.startup() {
             Ok(palette) => palette,
-            Err(e) => self.handle_palette_error(e),
+            Err(e) => {
+                self.error = Some(e);
+                Vec::new()
+            }
         };
         while !self.exit {
             terminal.draw(|frame| self.draw(frame))?;
@@ -40,6 +44,10 @@ impl App {
 
     fn draw(&self, frame: &mut Frame) {
         frame.render_widget(self, frame.area());
+
+        if let Some(error) = &self.error {
+            self.draw_error_popup(frame, error);
+        }
     }
 
     fn handle_events(&mut self) -> io::Result<()> {
@@ -75,7 +83,7 @@ impl App {
     fn shutdown(&mut self, palette: Vec<dis_color>) {
         match save_palette("cache", palette) {
             Ok(()) => (),
-            Err(e) => self.handle_shutdown_error(e),
+            Err(e) => self.error = Some(e),
         }
     }
 
