@@ -4,11 +4,11 @@ use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
 use ratatui::{
     DefaultTerminal, Frame,
     buffer::Buffer,
-    layout::{Constraint, Rect},
+    layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Style, Stylize},
     symbols::border,
     text::{Line, Span, Text},
-    widgets::{Block, List, ListItem, Paragraph, Widget},
+    widgets::{Block, Borders, Clear, List, ListItem, Paragraph, Widget},
 };
 
 use crate::{
@@ -46,7 +46,7 @@ impl App {
         frame.render_widget(self, frame.area());
 
         if let Some(error) = &self.error {
-            self.draw_error_popup(frame, error);
+            draw_error_popup(frame, error);
         }
     }
 
@@ -86,41 +86,6 @@ impl App {
             Err(e) => self.error = Some(e),
         }
     }
-
-    fn handle_palette_error(&mut self, error: PaletteError) -> Vec<dis_color> {
-        match error {
-            PaletteError::Io(e) => {
-                println!("failed to open file: {e}");
-                println!("try again? open another file?");
-                Vec::new()
-            }
-            PaletteError::Parse(e) => {
-                println!("failed to parse text: {e}");
-                // TODO figure out possible recovery methods
-                // open another file
-                // generate random palette
-                Vec::new()
-            }
-            PaletteError::InvalidFormat(e) => {
-                println!("the color data was malformed: {e}");
-                // TODO figure out possible recovery methods
-                // open another file
-                // generate random palette
-                Vec::new()
-            }
-            PaletteError::UntranslatableEncoding(e) => {
-                println!("unable to translate: {e}");
-                // TODO figure out possible recovery methods
-                Vec::new()
-            }
-        }
-    }
-
-    fn handle_shutdown_error(&mut self, error: PaletteError) {
-        match error {
-            _ => println!("{error}"),
-        }
-    }
 }
 
 impl Widget for &App {
@@ -143,4 +108,44 @@ impl Widget for &App {
             .border_set(border::THICK);
         List::new(items).block(block).render(area, buf);
     }
+}
+
+fn draw_error_popup(frame: &mut Frame, error: &PaletteError) {
+    let area = centered_rect(frame.area(), 60, 9);
+    frame.render_widget(Clear, area);
+
+    let text = Text::from(vec![
+        Line::from("An error occurred").style(Style::default().fg(Color::Red)),
+        Line::from(""),
+        Line::from(error.to_string()),
+        Line::from(""),
+        Line::from("Press Enter or Esc to continue").style(Style::default().fg(Color::Gray)),
+    ]);
+
+    let popup = Paragraph::new(text)
+        .block(Block::default().borders(Borders::ALL).title(" Error "))
+        .alignment(ratatui::layout::Alignment::Center);
+
+    frame.render_widget(popup, area);
+}
+
+fn centered_rect(area: Rect, width: u16, height: u16) -> Rect {
+    let vertical = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Percentage((100 - height) / 2),
+            Constraint::Percentage(height),
+            Constraint::Percentage((100 - height) / 2),
+        ])
+        .split(area);
+    let horizontal = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage((100 - width) / 2),
+            Constraint::Percentage(width),
+            Constraint::Percentage((100 - width) / 2),
+        ])
+        .split(vertical[1]);
+
+    horizontal[1]
 }
