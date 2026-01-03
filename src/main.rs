@@ -1,7 +1,6 @@
 use std::io;
 
 use palette_maker::tui::App;
-use ratatui::DefaultTerminal;
 
 fn main() -> io::Result<()> {
     let mut terminal = ratatui::init();

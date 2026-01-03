@@ -352,7 +352,7 @@ impl Encoding {
             )),
             _ => {
                 return Err(PaletteError::UntranslatableEncoding(
-                    "wrong encoding type".to_string(),
+                    "rgb to hex was given the wrong encoding type".to_string(),
                 ));
             }
         }
@@ -475,7 +475,7 @@ impl Encoding {
                     }
                     _ => {
                         return Err(PaletteError::UntranslatableEncoding(
-                            "could not translate to rgb".to_string(),
+                            "could not translate to rgb while trying to get hex".to_string(),
                         ));
                     }
                 }

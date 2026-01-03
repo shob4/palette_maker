@@ -61,9 +61,17 @@ impl App {
     }
 
     fn handle_key_event(&mut self, key_event: KeyEvent) {
+        if self.error.is_some() {
+            match key_event.code {
+                KeyCode::Enter | KeyCode::Esc => {
+                    self.error = None;
+                }
+                _ => {}
+            }
+        }
         match key_event.code {
             KeyCode::Char('q') => self.exit(),
-            _ => todo!(),
+            _ => {}
         }
     }
 

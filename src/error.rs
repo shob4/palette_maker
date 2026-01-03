@@ -11,6 +11,6 @@ pub enum PaletteError {
     #[error("Invalid palette line: {0}")]
     InvalidFormat(String),
 
-    #[error("Unable to translate")]
+    #[error("Unable to translate: {0}")]
     UntranslatableEncoding(String),
 }
