@@ -149,9 +149,9 @@ impl Encoding {
                 } else if c_max == b {
                     60.0 * ((r - g) / delta + 4.0)
                 } else {
-                    return Err(PaletteError::UntranslatableEncoding(
-                        "c_max ({c_max}) does not match r ({r}), g ({g}), or b ({b})".to_string(),
-                    ));
+                    return Err(PaletteError::UntranslatableEncoding(format!(
+                        "c_max ({c_max}) does not match r ({r}), g ({g}), or b ({b})"
+                    )));
                 };
 
                 let s = if delta == 0.0 {
@@ -286,7 +286,8 @@ impl Encoding {
                 assert!(*l <= 1000);
                 let h = *h;
                 let old_s = *s;
-                let b = *l + old_s * min(*l, 1000 - *l);
+                // TODO check multiplication
+                let b = (*l as u32 + old_s as u32 * min(*l, 1000 - *l) as u32) as u16;
                 let s = if b == 0 { 0 } else { 2 * (1000 - *l / b) };
                 Ok(Encoding::Hsb(h, s, b))
             }
@@ -351,9 +352,10 @@ impl Encoding {
                 (*r as u32) << 16 | (*g as u32) << 8 | (*b as u32),
             )),
             _ => {
-                return Err(PaletteError::UntranslatableEncoding(
-                    "rgb to hex was given the wrong encoding type".to_string(),
-                ));
+                return Err(PaletteError::UntranslatableEncoding(format!(
+                    "rgb to hex was given the wrong encoding type: {:?}",
+                    self
+                )));
             }
         }
     }
@@ -432,7 +434,7 @@ impl Encoding {
             _ => {
                 let hsb = self.translate_to_hsb()?;
                 match hsb {
-                    Encoding::Hsl(h, s, b) => Ok(Hsb::new(h, s, b)),
+                    Encoding::Hsb(h, s, b) => Ok(Hsb::new(h, s, b)),
                     _ => {
                         return Err(PaletteError::UntranslatableEncoding(
                             "could not translate to hsb".to_string(),
@@ -454,7 +456,7 @@ impl Encoding {
                     Encoding::Hex(h) => Ok(Hex::new(h)),
                     _ => {
                         return Err(PaletteError::UntranslatableEncoding(
-                            "could not translate rgb to hex".to_string(),
+                            "1 could not translate rgb to hex".to_string(),
                         ));
                     }
                 }
@@ -463,12 +465,12 @@ impl Encoding {
                 let rgb = self.translate_to_rgb()?;
                 match rgb {
                     Encoding::Rgb(_, _, _) => {
-                        let hex = self.rgb_to_hex()?;
+                        let hex = rgb.rgb_to_hex()?;
                         match hex {
                             Encoding::Hex(h) => Ok(Hex::new(h)),
                             _ => {
                                 return Err(PaletteError::UntranslatableEncoding(
-                                    "could not translate rgb to hex".to_string(),
+                                    "2 could not translate rgb to hex".to_string(),
                                 ));
                             }
                         }
