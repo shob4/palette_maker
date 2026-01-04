@@ -13,4 +13,7 @@ pub enum PaletteError {
 
     #[error("Unable to translate: {0}")]
     UntranslatableEncoding(String),
+
+    #[error("Unable to display: {0}")]
+    Display(String),
 }
