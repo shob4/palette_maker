@@ -18,11 +18,18 @@ use crate::{
     file::{load_palette, save_palette},
 };
 
+#[derive(Debug, Clone)]
+enum RetryAction {
+    Startup,
+    Save(Vec<dis_color>),
+}
+
 #[derive(Debug, Default)]
 pub struct App {
     colors: Vec<crate::color_spaces::Color>,
     exit: bool,
     error: Option<PaletteError>,
+    retry_action: Option<RetryAction>,
 }
 
 impl App {
@@ -31,6 +38,7 @@ impl App {
             Ok(palette) => palette,
             Err(e) => {
                 self.error = Some(e);
+                self.retry_action = Some(RetryAction::Startup);
                 Vec::new()
             }
         };
@@ -66,6 +74,9 @@ impl App {
                 KeyCode::Enter | KeyCode::Esc => {
                     self.error = None;
                 }
+                KeyCode::Char('r') => {
+                    self.retry();
+                }
                 _ => {}
             }
         }
@@ -89,32 +100,62 @@ impl App {
     }
 
     fn shutdown(&mut self, palette: Vec<dis_color>) {
-        match save_palette("cache", palette) {
+        match save_palette("cache", palette.clone()) {
             Ok(()) => (),
-            Err(e) => self.error = Some(e),
+            Err(e) => {
+                self.error = Some(e);
+                self.retry_action = Some(RetryAction::Save(palette));
+            }
+        }
+    }
+
+    fn retry(&mut self) {
+        if let Some(action) = self.retry_action.clone() {
+            self.error = None;
+            self.retry_action = None;
+
+            match action {
+                RetryAction::Startup => {
+                    if let Err(e) = self.startup().map(|p| self.colors = p) {
+                        self.error = Some(e);
+                        self.retry_action = Some(RetryAction::Startup);
+                    }
+                }
+                RetryAction::Save(palette) => {
+                    if let Err(e) = save_palette("cache", palette.clone()) {
+                        self.error = Some(e);
+                        self.retry_action = Some(RetryAction::Save(palette));
+                    }
+                }
+            }
         }
     }
 }
 
 impl Widget for &App {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        let title = Line::from(" Palette Generator ".bold());
-        let instructions = Line::from(vec![" Quit ".into(), "<Q> ".blue().bold()]);
-        let items: Vec<ListItem> = self
-            .colors
-            .iter()
-            .map(|c| {
-                ListItem::new(Line::from(vec![
-                    Span::styled(" ", Style::default().fg(c.ratatui_text())),
-                    Span::styled(c.hex_to_string(), Style::default().bg(c.ratatui_color())),
-                ]))
-            })
-            .collect();
         let block = Block::bordered()
-            .title(title.centered())
-            .title_bottom(instructions.centered())
+            .title(" Palette Generator ".bold())
+            .title_bottom(Line::from(vec![" Quit ".into(), "<Q> ".blue().bold()]).centered())
             .border_set(border::THICK);
-        List::new(items).block(block).render(area, buf);
+
+        let inner = block.inner(area);
+        block.render(area, buf);
+
+        if self.colors.is_empty() {
+            return;
+        }
+
+        let constraints = vec![Constraint::Ratio(1, self.colors.len() as u32); self.colors.len()];
+
+        let columns = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints(constraints)
+            .split(inner);
+
+        for (color, column_area) in self.colors.iter().zip(columns) {
+            render_color_column(color, column_area, buf);
+        }
     }
 }
 
@@ -128,6 +169,7 @@ fn draw_error_popup(frame: &mut Frame, error: &PaletteError) {
         Line::from(error.to_string()),
         Line::from(""),
         Line::from("Press Enter or Esc to continue").style(Style::default().fg(Color::Gray)),
+        Line::from("Press r to retry").style(Style::default().fg(Color::Gray)),
     ]);
 
     let popup = Paragraph::new(text)
@@ -156,4 +198,36 @@ fn centered_rect(area: Rect, width: u16, height: u16) -> Rect {
         .split(vertical[1]);
 
     horizontal[1]
+}
+
+fn render_color_column(color: dis_color, area: Rect, buf: &mut Buffer) {
+    let text = Text::from(Line::styled(
+        color.hex.h.clone(),
+        Style::default()
+            .fg(color.ratatui_text())
+            .bg(color.ratatui_color())
+            .bold(),
+    ));
+
+    let paragraph = Paragraph::new(text)
+        .style(Style::default().bg(color.ratatui_color()))
+        .alignment(ratatui::layout::Alignment::Center)
+        .block(Block::default())
+        .wrap(ratatui::widgets::Wrap { trim: true })
+        .alignment(ratatui::Layout::Alignment::Center);
+
+    paragraph.render(
+        Rect {
+            y: area.y + area.height - 1,
+            height: 1,
+            ..area
+        },
+        buf,
+    );
+
+    for y in area.y..area.y + area.height {
+        for x in area.x..area.x + area.width {
+            buf.get_mut(x, y).set_bg(color.ratatui_color());
+        }
+    }
 }

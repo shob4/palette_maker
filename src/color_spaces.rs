@@ -2,7 +2,7 @@ use crate::{encoding::Encoding, error::PaletteError};
 
 // TODO
 
-#[derive(Hash, Eq, Debug)]
+#[derive(Hash, Eq, Debug, Clone)]
 pub struct Hsl {
     pub h: u16,
     pub s: u16,
@@ -27,7 +27,7 @@ impl Hsl {
 
 // -----------------------
 
-#[derive(Hash, Eq, Debug)]
+#[derive(Hash, Eq, Debug, Clone)]
 pub struct Rgb {
     pub r: u8,
     pub g: u8,
@@ -52,7 +52,7 @@ impl Rgb {
 
 // -----------------------
 
-#[derive(Hash, Eq, Debug)]
+#[derive(Hash, Eq, Debug, Clone)]
 pub struct Hsb {
     pub h: u16,
     pub s: u16,
@@ -77,7 +77,7 @@ impl Hsb {
 
 // -----------------------
 
-#[derive(Hash, Eq, Debug)]
+#[derive(Hash, Eq, Debug, Clone)]
 pub struct Hex {
     pub h: u32,
 }
@@ -100,7 +100,7 @@ impl Hex {
 
 // -----------------------
 
-#[derive(Hash, Eq, Debug)]
+#[derive(Hash, Eq, Debug, Clone)]
 pub struct Color {
     pub rgb: Rgb,
     pub hsl: Hsl,
