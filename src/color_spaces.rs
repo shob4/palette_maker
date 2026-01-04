@@ -156,7 +156,7 @@ impl Color {
     }
 
     pub fn ratatui_text(&self) -> ratatui::style::Color {
-        if self.hsl.l >= 500 {
+        if self.hsl.l <= 500 {
             ratatui::style::Color::Rgb(255, 255, 255)
         } else {
             ratatui::style::Color::Rgb(0, 0, 0)
