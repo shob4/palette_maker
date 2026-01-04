@@ -22,7 +22,6 @@ use crate::{
 enum RetryAction {
     Startup,
     Save(Vec<dis_color>),
-    Render(Rect, &mut Buffer),
 }
 
 #[derive(Debug, Default)]
@@ -36,7 +35,10 @@ pub struct App {
 impl App {
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
         let palette = match self.startup() {
-            Ok(palette) => palette,
+            Ok(palette) => {
+                self.colors = palette.clone();
+                palette
+            }
             Err(e) => {
                 self.error = Some(e);
                 self.retry_action = Some(RetryAction::Startup);
@@ -128,7 +130,6 @@ impl App {
                         self.retry_action = Some(RetryAction::Save(palette));
                     }
                 }
-                RetryAction::Render(area, buf) => self.render(area, buf),
             }
         }
     }
@@ -156,13 +157,7 @@ impl Widget for &App {
             .split(inner);
 
         for (color, column_area) in self.colors.iter().zip(columns.iter()) {
-            match render_color_column(color.clone(), *column_area, buf) {
-                Ok(_) => continue,
-                Err(e) => {
-                    self.error = Some(e);
-                    self.retry_action = Some(RetryAction::Render(area, buf));
-                }
-            }
+            render_color_column(color.clone(), *column_area, buf);
         }
     }
 }
@@ -208,7 +203,7 @@ fn centered_rect(area: Rect, width: u16, height: u16) -> Rect {
     horizontal[1]
 }
 
-fn render_color_column(color: dis_color, area: Rect, buf: &mut Buffer) -> Result<(), PaletteError> {
+fn render_color_column(color: dis_color, area: Rect, buf: &mut Buffer) {
     let text = Text::from(Line::styled(
         color.hex_to_string(),
         Style::default()
@@ -216,6 +211,8 @@ fn render_color_column(color: dis_color, area: Rect, buf: &mut Buffer) -> Result
             .bg(color.ratatui_color())
             .bold(),
     ));
+
+    buf.set_style(area, Style::default().bg(color.ratatui_color()));
 
     let paragraph = Paragraph::new(text)
         .style(Style::default().bg(color.ratatui_color()))
@@ -232,18 +229,4 @@ fn render_color_column(color: dis_color, area: Rect, buf: &mut Buffer) -> Result
         },
         buf,
     );
-
-    for y in area.y..area.y + area.height {
-        for x in area.x..area.x + area.width {
-            match buf.cell_mut((x, y)) {
-                Some(column) => column.set_bg(color.ratatui_color()),
-                None => {
-                    return Err(PaletteError::Display(format!(
-                        "unable to get cell from {x}, {y}"
-                    )));
-                }
-            };
-        }
-    }
-    Ok(())
 }
