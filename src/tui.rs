@@ -30,6 +30,7 @@ pub struct App {
     exit: bool,
     error: Option<PaletteError>,
     retry_action: Option<RetryAction>,
+    selected: usize,
 }
 
 impl App {
@@ -85,6 +86,16 @@ impl App {
         }
         match key_event.code {
             KeyCode::Char('q') => self.exit(),
+            KeyCode::Char('h') => {
+                if self.selected > 0 {
+                    self.selected -= 1;
+                }
+            }
+            KeyCode::Char('l') => {
+                if self.selected + 1 < self.colors.len() {
+                    self.selected += 1;
+                }
+            }
             _ => {}
         }
     }
@@ -156,8 +167,9 @@ impl Widget for &App {
             .constraints(constraints)
             .split(inner);
 
-        for (color, column_area) in self.colors.iter().zip(columns.iter()) {
-            render_color_column(color.clone(), *column_area, buf);
+        for (i, (color, column_area)) in self.colors.iter().zip(columns.iter()).enumerate() {
+            let selected = i == self.selected;
+            render_color_column(color.clone(), *column_area, buf, selected);
         }
     }
 }
@@ -203,23 +215,38 @@ fn centered_rect(area: Rect, width: u16, height: u16) -> Rect {
     horizontal[1]
 }
 
-fn render_color_column(color: dis_color, area: Rect, buf: &mut Buffer) {
-    let text = Text::from(Line::styled(
-        color.hex_to_string(),
-        Style::default()
-            .fg(color.ratatui_text())
-            .bg(color.ratatui_color())
-            .bold(),
-    ));
+fn render_color_column(color: dis_color, area: Rect, buf: &mut Buffer, selected: bool) {
+    let mut style = Style::default()
+        .fg(color.ratatui_text())
+        .bg(color.ratatui_color());
 
-    buf.set_style(area, Style::default().bg(color.ratatui_color()));
+    if selected {
+        style = style.add_modifier(ratatui::style::Modifier::BOLD);
+    }
 
-    let paragraph = Paragraph::new(text)
-        .style(Style::default().bg(color.ratatui_color()))
+    buf.set_style(area, style);
+
+    let text = Text::from(Line::styled(color.hex_to_string(), style));
+
+    let mut paragraph = Paragraph::new(text.clone())
+        .style(style)
         .alignment(ratatui::layout::Alignment::Center)
         .block(Block::default())
         .wrap(ratatui::widgets::Wrap { trim: true })
         .alignment(ratatui::layout::Alignment::Center);
+
+    if selected {
+        paragraph = Paragraph::new(text)
+            .style(style)
+            .alignment(ratatui::layout::Alignment::Center)
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .border_style(Style::default().fg(Color::White)),
+            )
+            .wrap(ratatui::widgets::Wrap { trim: true })
+            .alignment(ratatui::layout::Alignment::Center);
+    }
 
     paragraph.render(
         Rect {
