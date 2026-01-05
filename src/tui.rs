@@ -226,34 +226,28 @@ fn render_color_column(color: dis_color, area: Rect, buf: &mut Buffer, selected:
 
     buf.set_style(area, style);
 
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Min(3), Constraint::Length(3)])
+        .split(area);
+
     let text = Text::from(Line::styled(color.hex_to_string(), style));
 
-    let mut paragraph = Paragraph::new(text.clone())
-        .style(style)
-        .alignment(ratatui::layout::Alignment::Center)
-        .block(Block::default())
-        .wrap(ratatui::widgets::Wrap { trim: true })
-        .alignment(ratatui::layout::Alignment::Center);
-
+    let mut block = Block::default()
+        .borders(Borders::ALL)
+        .border_style(Style::default())
+        .fg(color.ratatui_color());
     if selected {
-        paragraph = Paragraph::new(text)
-            .style(style)
-            .alignment(ratatui::layout::Alignment::Center)
-            .block(
-                Block::default()
-                    .borders(Borders::ALL)
-                    .border_style(Style::default().fg(Color::White)),
-            )
-            .wrap(ratatui::widgets::Wrap { trim: true })
-            .alignment(ratatui::layout::Alignment::Center);
+        block = block
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(Color::White));
     }
 
-    paragraph.render(
-        Rect {
-            y: area.y + area.height - 1,
-            height: 1,
-            ..area
-        },
-        buf,
-    );
+    Paragraph::new(text.clone())
+        .style(style)
+        .alignment(ratatui::layout::Alignment::Center)
+        .block(block)
+        .wrap(ratatui::widgets::Wrap { trim: true })
+        .alignment(ratatui::layout::Alignment::Center)
+        .render(chunks[1], buf);
 }
