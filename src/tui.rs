@@ -12,7 +12,7 @@ use ratatui::{
 };
 
 use crate::{
-    color_math::generate_palette,
+    color_math::{generate_palette, generate_palette_from_base},
     color_spaces::Color as dis_color,
     error::PaletteError,
     file::{load_palette, save_palette},
@@ -22,6 +22,7 @@ use crate::{
 enum RetryAction {
     Startup,
     Save(Vec<dis_color>),
+    Generate(usize),
 }
 
 #[derive(Debug, Default)]
@@ -31,6 +32,7 @@ pub struct App {
     error: Option<PaletteError>,
     retry_action: Option<RetryAction>,
     selected: usize,
+    locked: bool,
 }
 
 impl App {
@@ -96,6 +98,65 @@ impl App {
                     self.selected += 1;
                 }
             }
+            KeyCode::Char(' ') => {
+                if self.locked {
+                    let mut temp: Vec<dis_color> = Vec::new();
+                    let mut indexes: Vec<usize> = Vec::new();
+                    for (i, color) in self.colors.iter().enumerate() {
+                        if color.locked {
+                            temp.push(color.clone());
+                            indexes.push(i);
+                        }
+                    }
+                    let new_palette =
+                        match generate_palette_from_base(&temp, self.colors.len() - temp.len()) {
+                            Ok(palette) => palette,
+                            Err(e) => {
+                                self.error = Some(e);
+                                self.retry_action =
+                                    Some(RetryAction::Generate(self.colors.len() - 1));
+                                Vec::new()
+                            }
+                        };
+                }
+                self.colors = match generate_palette(self.colors.len() - 1) {
+                    Ok(palette) => palette,
+                    Err(e) => {
+                        self.error = Some(e);
+                        self.retry_action = Some(RetryAction::Generate(self.colors.len() - 1));
+                        Vec::new()
+                    }
+                }
+            }
+            KeyCode::Char('L') => {
+                self.colors[self.selected].locked = true;
+                self.locked = true;
+            }
+            // space
+            // get new set of colors and replace self
+            // ---
+            // r
+            // replace current selected color
+            // ---
+            // L
+            // lock current selection
+            // ---
+            // c
+            // open menu for copying selected color
+            //   a
+            //   copy all encodings
+            // ---
+            // e
+            // edit selected color
+            // ---
+            // m
+            // open monochrome menu
+            // ---
+            // j and k
+            // move up and down
+            // ---
+            // a
+            // add another color click event?
             _ => {}
         }
     }
@@ -139,6 +200,12 @@ impl App {
                     if let Err(e) = save_palette("cache", palette.clone()) {
                         self.error = Some(e);
                         self.retry_action = Some(RetryAction::Save(palette));
+                    }
+                }
+                RetryAction::Generate(size) => {
+                    if let Err(e) = generate_palette(size) {
+                        self.error = Some(e);
+                        self.retry_action = Some(RetryAction::Generate(size));
                     }
                 }
             }

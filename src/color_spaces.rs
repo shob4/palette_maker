@@ -107,6 +107,7 @@ pub struct Color {
     pub hsb: Hsb,
     pub hex: Hex,
     pub name: String,
+    pub locked: bool,
 }
 
 impl PartialEq for Color {
@@ -116,6 +117,7 @@ impl PartialEq for Color {
             && self.hsb == other.hsb
             && self.hex == other.hex
             && self.name == other.name
+            && self.locked == other.locked
     }
 }
 
@@ -132,6 +134,7 @@ impl Color {
             hsb: hsb,
             hex: hex,
             name: name,
+            locked: false,
         })
     }
 

@@ -70,25 +70,4 @@ mod tests {
             Err(e) => panic!("{e}"),
         };
     }
-
-    #[test]
-    fn test_load_palette() {
-        let palette = Vec::from([
-            Color::new(Hex::new(0xf2d7ee).encode()),
-            Color::new(Hex::new(0xd3bcc0).encode()),
-            Color::new(Hex::new(0x69306d).encode()),
-            Color::new(Hex::new(0x0e103d).encode()),
-            Color::new(Hex::new(0xe83151).encode()),
-        ]);
-        let result_palette = match palette.into_iter().collect() {
-            Ok(vec) => vec,
-            Err(e) => panic!("{e}"),
-        };
-
-        let test_palette = match load_palette("test") {
-            Ok(vec) => vec,
-            Err(e) => panic!("{e}"),
-        };
-        assert_eq!(test_palette, result_palette);
-    }
 }

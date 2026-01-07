@@ -145,7 +145,7 @@ pub fn generate_color() -> Result<Color, PaletteError> {
     Ok(Color::new(Hsl::new(h, s, l).encode())?)
 }
 
-pub fn generate_palette(num: u8) -> Result<Vec<Color>, PaletteError> {
+pub fn generate_palette(num: usize) -> Result<Vec<Color>, PaletteError> {
     assert!(num > 0);
     let mut new_palette = Vec::with_capacity(num as usize);
     new_palette.push(generate_color()?);
@@ -196,9 +196,9 @@ pub fn generate_palette(num: u8) -> Result<Vec<Color>, PaletteError> {
 }
 
 pub fn generate_palette_from_base(
-    current_palette: &mut Vec<Color>,
-    num: u8,
-) -> Result<(), PaletteError> {
+    current_palette: &Vec<Color>,
+    num: usize,
+) -> Result<Vec<Color>, PaletteError> {
     let mut rng = rand::rng();
     let mut temp_palette = Vec::with_capacity(num as usize);
     let mut i = 0;
@@ -242,9 +242,7 @@ pub fn generate_palette_from_base(
         i += 1;
     }
 
-    current_palette.append(&mut temp_palette);
-
-    Ok(())
+    Ok(temp_palette)
 }
 
 // -----------------------
