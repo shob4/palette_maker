@@ -101,28 +101,33 @@ impl App {
             }
             KeyCode::Char(' ') => {
                 if self.locked {
-                    let mut temp: Vec<dis_color> = Vec::new();
-                    let mut indexes: Vec<usize> = Vec::new();
-                    for (i, color) in self.colors.iter().enumerate() {
-                        if color.locked {
-                            temp.push(color.clone());
-                            indexes.push(i);
-                        }
-                    }
-                    let mut new_palette = match generate_palette_from_base(&temp, self.colors.len())
-                    {
+                    let mut slots: Vec<Option<dis_color>> = self
+                        .colors
+                        .iter()
+                        .map(|c| if c.locked { Some(c.clone()) } else { None })
+                        .collect();
+
+                    let locked_colors: Vec<dis_color> =
+                        slots.iter().filter_map(|c| c.clone()).collect();
+
+                    let mut generated = match generate_palette_from_base(
+                        &locked_colors,
+                        self.colors.len() - locked_colors.len(),
+                    ) {
                         Ok(palette) => palette,
                         Err(e) => {
                             self.error = Some(e);
                             self.retry_action = Some(RetryAction::Generate(self.colors.len() - 1));
-                            Vec::new()
+                            return;
                         }
                     };
 
-                    for i in 0..indexes.len() {
-                        new_palette[indexes[i]] = temp[i].clone();
+                    for slot in slots.iter_mut() {
+                        if slot.is_none() {
+                            *slot = Some(generated.remove(0));
+                        }
                     }
-                    self.colors = new_palette;
+                    self.colors = slots.into_iter().map(Option::unwrap).collect();
                     return;
                 }
                 self.colors = match generate_palette(self.colors.len() - 1) {
@@ -130,7 +135,7 @@ impl App {
                     Err(e) => {
                         self.error = Some(e);
                         self.retry_action = Some(RetryAction::Generate(self.colors.len() - 1));
-                        Vec::new()
+                        return;
                     }
                 }
             }
