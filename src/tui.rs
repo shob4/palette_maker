@@ -33,6 +33,7 @@ pub struct App {
     retry_action: Option<RetryAction>,
     selected: usize,
     locked: bool,
+    num_locked: u8,
 }
 
 impl App {
@@ -108,7 +109,7 @@ impl App {
                             indexes.push(i);
                         }
                     }
-                    let new_palette =
+                    let mut new_palette =
                         match generate_palette_from_base(&temp, self.colors.len() - temp.len()) {
                             Ok(palette) => palette,
                             Err(e) => {
@@ -118,6 +119,12 @@ impl App {
                                 Vec::new()
                             }
                         };
+
+                    for i in 0..indexes.len() {
+                        new_palette[indexes[i]] = temp[i].clone();
+                    }
+                    self.colors = new_palette;
+                    return;
                 }
                 self.colors = match generate_palette(self.colors.len() - 1) {
                     Ok(palette) => palette,
@@ -129,8 +136,17 @@ impl App {
                 }
             }
             KeyCode::Char('L') => {
+                if self.colors[self.selected].locked {
+                    self.colors[self.selected].locked = false;
+                    self.num_locked -= 1;
+                    if self.num_locked == 0 {
+                        self.locked = false;
+                    }
+                    return;
+                }
                 self.colors[self.selected].locked = true;
                 self.locked = true;
+                self.num_locked += 1;
             }
             // space
             // get new set of colors and replace self
