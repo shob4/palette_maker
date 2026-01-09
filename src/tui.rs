@@ -109,16 +109,15 @@ impl App {
                             indexes.push(i);
                         }
                     }
-                    let mut new_palette =
-                        match generate_palette_from_base(&temp, self.colors.len() - temp.len()) {
-                            Ok(palette) => palette,
-                            Err(e) => {
-                                self.error = Some(e);
-                                self.retry_action =
-                                    Some(RetryAction::Generate(self.colors.len() - 1));
-                                Vec::new()
-                            }
-                        };
+                    let mut new_palette = match generate_palette_from_base(&temp, self.colors.len())
+                    {
+                        Ok(palette) => palette,
+                        Err(e) => {
+                            self.error = Some(e);
+                            self.retry_action = Some(RetryAction::Generate(self.colors.len() - 1));
+                            Vec::new()
+                        }
+                    };
 
                     for i in 0..indexes.len() {
                         new_palette[indexes[i]] = temp[i].clone();
