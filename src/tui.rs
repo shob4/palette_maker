@@ -12,7 +12,7 @@ use ratatui::{
 };
 
 use crate::{
-    color_math::{generate_palette, generate_palette_from_base},
+    color_math::{generate_color, generate_palette, generate_palette_from_base},
     color_spaces::Color as dis_color,
     error::PaletteError,
     file::{load_palette, save_palette},
@@ -23,6 +23,7 @@ enum RetryAction {
     Startup,
     Save(Vec<dis_color>),
     Generate(usize),
+    GenerateSingle,
 }
 
 #[derive(Debug, Default)]
@@ -152,6 +153,19 @@ impl App {
                 self.locked = true;
                 self.num_locked += 1;
             }
+            KeyCode::Char('r') => {
+                if self.colors[self.selected].locked {
+                    return;
+                }
+                self.colors[self.selected] = match generate_color() {
+                    Ok(color) => color,
+                    Err(e) => {
+                        self.error = Some(e);
+                        self.retry_action = Some(RetryAction::GenerateSingle);
+                        return;
+                    }
+                };
+            }
             // space
             // get new set of colors and replace self
             // ---
@@ -226,6 +240,12 @@ impl App {
                     if let Err(e) = generate_palette(size) {
                         self.error = Some(e);
                         self.retry_action = Some(RetryAction::Generate(size));
+                    }
+                }
+                RetryAction::GenerateSingle => {
+                    if let Err(e) = generate_color() {
+                        self.error = Some(e);
+                        self.retry_action = Some(RetryAction::GenerateSingle);
                     }
                 }
             }
@@ -315,10 +335,19 @@ fn render_color_column(color: dis_color, area: Rect, buf: &mut Buffer, selected:
 
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Min(3), Constraint::Length(3)])
+        .constraints([Constraint::Min(4), Constraint::Length(4)])
         .split(area);
 
-    let text = Text::from(Line::styled(color.hex_to_string(), style));
+    let mut text = Text::from(vec![
+        Line::styled("", style),
+        Line::styled(color.hex_to_string(), style),
+    ]);
+    if color.locked {
+        text = Text::from(vec![
+            Line::styled("", style),
+            Line::styled(color.hex_to_string(), style),
+        ]);
+    }
 
     let mut block = Block::default()
         .borders(Borders::ALL)
