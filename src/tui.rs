@@ -12,11 +12,21 @@ use ratatui::{
 };
 
 use crate::{
-    color_math::{generate_color, generate_palette, generate_palette_from_base},
-    color_spaces::Color as dis_color,
+    color_math::{generate_color, generate_palette, generate_palette_from_base, monochromatic},
+    color_spaces::{Color as dis_color, Hsl},
     error::PaletteError,
     file::{load_palette, save_palette},
 };
+
+#[derive(Debug, Clone)]
+enum UiMode {
+    Normal,
+    Monochrome {
+        column: usize,
+        options: Vec<dis_color>,
+        selected: usize,
+    },
+}
 
 #[derive(Debug, Clone)]
 enum RetryAction {
@@ -24,6 +34,7 @@ enum RetryAction {
     Save(Vec<dis_color>),
     Generate(usize),
     GenerateSingle,
+    Monochrome(Hsl),
 }
 
 #[derive(Debug, Default)]
@@ -35,6 +46,7 @@ pub struct App {
     selected: usize,
     locked: bool,
     num_locked: u8,
+    mode: UiMode,
 }
 
 impl App {
@@ -166,15 +178,26 @@ impl App {
                     }
                 };
             }
-            // space
-            // get new set of colors and replace self
-            // ---
-            // r
-            // replace current selected color
-            // ---
-            // L
-            // lock current selection
-            // ---
+            KeyCode::Char('m') => {
+                if matches!(self.mode, UiMode::Normal) {
+                    let options = match monochromatic(&self.colors[self.selected].hsl) {
+                        Ok(palette) => palette,
+                        Err(e) => {
+                            self.error = Some(e);
+                            self.retry_action = Some(RetryAction::Monochrome(
+                                self.colors[self.selected].hsl.clone(),
+                            ));
+                            return;
+                        }
+                    };
+
+                    self.mode = UiMode::Monochrome {
+                        column: self.selected,
+                        options: options.clone(),
+                        selected: options.len() / 2,
+                    };
+                }
+            }
             // c
             // open menu for copying selected color
             //   a
@@ -190,7 +213,8 @@ impl App {
             // move up and down
             // ---
             // a
-            // add another color click event?
+            // add another color
+            // click event?
             _ => {}
         }
     }
@@ -246,6 +270,12 @@ impl App {
                     if let Err(e) = generate_color() {
                         self.error = Some(e);
                         self.retry_action = Some(RetryAction::GenerateSingle);
+                    }
+                }
+                RetryAction::Monochrome(hsl) => {
+                    if let Err(e) = monochromatic(&hsl) {
+                        self.error = Some(e);
+                        self.retry_action = Some(RetryAction::Monochrome(hsl));
                     }
                 }
             }
