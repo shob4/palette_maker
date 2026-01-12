@@ -18,8 +18,9 @@ use crate::{
     file::{load_palette, save_palette},
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 enum UiMode {
+    #[default]
     Normal,
     Monochrome {
         column: usize,
@@ -79,12 +80,26 @@ impl App {
     }
 
     fn handle_events(&mut self) -> io::Result<()> {
-        match event::read()? {
-            Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
-                self.handle_key_event(key_event)
+        match &self.mode {
+            UiMode::Normal => {
+                match event::read()? {
+                    Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
+                        self.handle_key_event(key_event)
+                    }
+                    _ => {}
+                };
             }
-            _ => {}
-        };
+            UiMode::Monochrome {
+                column: _,
+                options: _,
+                selected: _,
+            } => match event::read()? {
+                Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
+                    self.handle_monochrome_key_event(key_event)
+                }
+                _ => {}
+            },
+        }
         Ok(())
     }
 
@@ -219,6 +234,50 @@ impl App {
         }
     }
 
+    fn handle_monochrome_key_event(&mut self, key_event: KeyEvent) {
+        if self.error.is_some() {
+            match key_event.code {
+                KeyCode::Enter | KeyCode::Esc => {
+                    self.error = None;
+                }
+                KeyCode::Char('r') => {
+                    self.retry();
+                }
+                _ => {}
+            }
+        }
+        if let UiMode::Monochrome {
+            column,
+            options,
+            selected,
+        } = &mut self.mode
+        {
+            match key_event.code {
+                KeyCode::Char('j') => {
+                    if *selected + 1 < options.len() {
+                        *selected += 1;
+                    }
+                }
+                KeyCode::Char('k') => {
+                    if *selected > 0 {
+                        *selected -= 1;
+                    }
+                }
+                KeyCode::Enter => {
+                    self.colors[*column] = options[*selected].clone();
+                    self.mode = UiMode::Normal;
+                }
+                KeyCode::Esc => {
+                    self.mode = UiMode::Normal;
+                }
+                KeyCode::Char('q') => {
+                    self.exit();
+                }
+                _ => {}
+            }
+        }
+    }
+
     fn exit(&mut self) {
         self.exit = true;
     }
@@ -304,9 +363,21 @@ impl Widget for &App {
             .constraints(constraints)
             .split(inner);
 
-        for (i, (color, column_area)) in self.colors.iter().zip(columns.iter()).enumerate() {
-            let selected = i == self.selected;
-            render_color_column(color.clone(), *column_area, buf, selected);
+        for (i, column_area) in columns.iter().enumerate() {
+            match &self.mode {
+                UiMode::Monochrome {
+                    column,
+                    options,
+                    selected,
+                } if *column == i => {
+                    render_monochrome_column(options, *selected, *column_area, buf);
+                }
+                _ => {
+                    let color = self.colors[i].clone();
+                    let selected = i == self.selected;
+                    render_color_column(color, *column_area, buf, selected);
+                }
+            }
         }
     }
 }
@@ -396,4 +467,37 @@ fn render_color_column(color: dis_color, area: Rect, buf: &mut Buffer, selected:
         .wrap(ratatui::widgets::Wrap { trim: true })
         .alignment(ratatui::layout::Alignment::Center)
         .render(chunks[1], buf);
+}
+
+fn render_monochrome_column(colors: &[dis_color], selected: usize, area: Rect, buf: &mut Buffer) {
+    let rows = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(vec![
+            Constraint::Ratio(1, colors.len() as u32);
+            colors.len()
+        ])
+        .split(area);
+
+    for (i, (color, row)) in colors.iter().zip(rows.iter()).enumerate() {
+        let base_style = Style::default()
+            .bg(color.ratatui_color())
+            .fg(color.ratatui_text());
+
+        let block = if i == selected {
+            Block::default()
+                .borders(Borders::ALL)
+                .border_style(Style::default())
+                .fg(color.ratatui_text())
+        } else {
+            Block::default()
+        };
+
+        let text = Line::from(Span::styled(color.hex_to_string(), base_style));
+
+        Paragraph::new(text)
+            .block(block)
+            .style(base_style)
+            .alignment(ratatui::layout::Alignment::Center)
+            .render(*row, buf);
+    }
 }

@@ -46,11 +46,11 @@ pub fn analogous(hsl: Hsl) -> (Hsl, Hsl) {
 pub fn monochromatic(hsl: &Hsl) -> Result<Vec<Color>, PaletteError> {
     let mut monochrome: Vec<Color> = Vec::new();
 
-    for l in ((hsl.l + 50)..=1000).step_by(50) {
+    for l in (50..hsl.l).step_by(50) {
         monochrome.push(Color::new(Hsl::new(hsl.h, hsl.s, l).encode())?);
     }
 
-    for l in (50..hsl.l).rev().step_by(50) {
+    for l in ((hsl.l + 50)..=1000).step_by(50) {
         monochrome.push(Color::new(Hsl::new(hsl.h, hsl.s, l).encode())?);
     }
 
