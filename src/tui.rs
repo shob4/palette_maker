@@ -230,6 +230,9 @@ impl App {
             // a
             // add another color
             // click event?
+            // ---
+            // s
+            // save palette
             _ => {}
         }
     }
@@ -399,6 +402,16 @@ fn draw_error_popup(frame: &mut Frame, error: &PaletteError) {
         .block(Block::default().borders(Borders::ALL).title(" Error "))
         .alignment(ratatui::layout::Alignment::Center);
 
+    frame.render_widget(popup, area);
+}
+
+fn draw_save_popup(frame: &mut Frame) {
+    let area = centered_rect(frame.area(), 60, 9);
+    frame.render_widget(Clear, area);
+
+    let text = Text::from(vec![Line::from("Save as:"), Line::from("")]);
+
+    let popup = Paragraph::new(text).block(Block::default().borders(Borders::ALL).title(" Save "));
     frame.render_widget(popup, area);
 }
 
