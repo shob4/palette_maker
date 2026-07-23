@@ -1,7 +1,11 @@
+pub mod app;
 pub mod color_math;
 pub mod color_spaces;
 pub mod encoding;
 pub mod error;
+pub mod event;
 pub mod file;
+pub mod input;
+pub mod mode;
 pub mod named_colors;
-pub mod tui;
+pub mod ui;
