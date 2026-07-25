@@ -29,6 +29,12 @@ pub fn load_palette(palette_name: &str) -> Result<Vec<Color>, PaletteError> {
         palette.push(Color::new(Rgb::new(r, g, b).encode())?);
     }
 
+    if palette.len() < 1 {
+        return Err(PaletteError::Display(
+            "not enough colors in cache".to_string(),
+        ));
+    }
+
     Ok(palette)
 }
 
