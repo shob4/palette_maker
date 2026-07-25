@@ -4,7 +4,7 @@ use crate::{
     error::PaletteError,
     file::{load_palette, save_palette},
     mode::{RetryAction, UiMode},
-    ui::draw_error_popup,
+    ui::{draw_error_popup, draw_save_popup},
 };
 use ratatui::{DefaultTerminal, Frame};
 use std::io;
@@ -27,6 +27,10 @@ impl App {
 
         if let Some(error) = &self.error {
             draw_error_popup(frame, error);
+        }
+
+        if let UiMode::Save { input } = &self.mode {
+            draw_save_popup(frame, input);
         }
     }
 
