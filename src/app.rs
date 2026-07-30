@@ -35,22 +35,20 @@ impl App {
     }
 
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
-        let palette = match self.startup() {
+        match self.startup() {
             Ok(palette) => {
                 self.colors = palette.clone();
-                palette
             }
             Err(e) => {
                 self.error = Some(e);
                 self.retry_action = Some(RetryAction::Startup);
-                Vec::new()
             }
         };
         while !self.exit {
             terminal.draw(|frame| self.draw(frame))?;
             self.handle_events()?;
         }
-        self.shutdown(palette);
+        self.shutdown(self.colors.clone());
         Ok(())
     }
     pub fn exit(&mut self) {
@@ -110,6 +108,12 @@ impl App {
                     if let Err(e) = monochromatic(&hsl) {
                         self.error = Some(e);
                         self.retry_action = Some(RetryAction::Monochrome(hsl));
+                    }
+                }
+                RetryAction::Load(name) => {
+                    if let Err(e) = load_palette(&name) {
+                        self.error = Some(e);
+                        self.retry_action = Some(RetryAction::Load(name))
                     }
                 }
             }

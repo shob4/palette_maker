@@ -39,10 +39,7 @@ pub fn load_palette(palette_name: &str) -> Result<Vec<Color>, PaletteError> {
 }
 
 pub fn save_palette(palette_name: &str, palette: Vec<Color>) -> Result<(), PaletteError> {
-    let mut file = match File::open(palette_name) {
-        Ok(file) => file,
-        Err(_) => File::create(palette_name)?,
-    };
+    let mut file = File::create(palette_name)?;
     for color in palette {
         file.write(color.rgb_to_string().as_bytes())?;
     }

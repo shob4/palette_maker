@@ -138,7 +138,7 @@ fn render_color_column(color: dis_color, area: Rect, buf: &mut Buffer, selected:
     if selected {
         block = block
             .borders(Borders::ALL)
-            .border_style(Style::default().fg(Color::White));
+            .border_style(Style::default().fg(color.ratatui_text()));
     }
 
     Paragraph::new(text.clone())

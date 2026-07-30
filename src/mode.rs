@@ -15,6 +15,9 @@ pub enum UiMode {
     Save {
         input: TextInput,
     },
+    Open {
+        input: TextInput,
+    },
 }
 
 #[derive(Debug, Clone)]
@@ -24,4 +27,5 @@ pub enum RetryAction {
     Generate(usize),
     GenerateSingle,
     Monochrome(Hsl),
+    Load(String),
 }

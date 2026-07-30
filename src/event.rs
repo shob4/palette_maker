@@ -2,7 +2,7 @@ use crate::{
     app::App,
     color_math::{generate_color, generate_palette, generate_palette_from_base, monochromatic},
     color_spaces::Color as dis_color,
-    file::save_palette,
+    file::{load_palette, save_palette},
     input::TextInput,
     mode::{RetryAction, UiMode},
 };
@@ -36,6 +36,12 @@ impl App {
                 }
                 _ => {}
             }, // need to add save mode, edit mode, copy mode(?)
+            UiMode::Open { input: _ } => match event::read()? {
+                Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
+                    self.handle_open_event(key_event)
+                }
+                _ => {}
+            },
         }
         Ok(())
     }
@@ -249,5 +255,31 @@ impl App {
             KeyCode::Esc => self.mode = UiMode::Normal,
             _ => {}
         }
+    }
+
+    fn handle_open_event(&mut self, key_event: KeyEvent) {
+        let UiMode::Open { input } = &mut self.mode else {
+            return;
+        };
+
+        match key_event.code {
+            KeyCode::Char(c) => input.insert_char(c),
+            KeyCode::Backspace => input.delete_char_before_cursor(),
+            KeyCode::Delete => input.delete_char_after_cursor(),
+            KeyCode::Left => input.move_left(),
+            KeyCode::Right => input.move_right(),
+            KeyCode::Enter => {
+                let name = input.value().to_string();
+                self.colors = match load_palette(&name) {
+                    Ok(palette) => palette,
+                    Err(e) => {
+                        self.error = Some(e);
+                        self.retry_action = Some(RetryAction::Load(name));
+                        return;
+                    }
+                };
+            }
+            _ => {}
+        };
     }
 }
