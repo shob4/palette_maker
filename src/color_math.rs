@@ -244,3 +244,14 @@ pub fn generate_palette_from_base(
 
     Ok(temp_palette)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn generate_palette_returns_right_length() {
+        let palette = generate_palette(5).unwrap();
+        assert_eq!(palette.len(), 5);
+    }
+}

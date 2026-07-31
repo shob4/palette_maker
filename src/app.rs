@@ -49,6 +49,10 @@ impl App {
             self.handle_events()?;
         }
         self.shutdown(self.colors.clone());
+        while self.error.is_some() {
+            terminal.draw(|frame| self.draw(frame))?;
+            self.handle_shutdown_error()?;
+        }
         Ok(())
     }
     pub fn exit(&mut self) {
@@ -117,6 +121,40 @@ impl App {
                     }
                 }
             }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::input::TextInput;
+
+    use super::*;
+    use crossterm::event::{KeyCode, KeyEvent};
+
+    #[test]
+    fn pressing_s_enters_save() {
+        let mut app = App {
+            colors: generate_palette(5).unwrap(),
+            ..Default::default()
+        };
+        app.handle_key_event(KeyEvent::from(KeyCode::Char('s')));
+        assert!(matches!(app.mode, UiMode::Save { .. }));
+    }
+
+    #[test]
+    fn typing_in_save_mode_updates_input() {
+        let mut app = App {
+            mode: UiMode::Save {
+                input: TextInput::new(),
+            },
+            ..Default::default()
+        };
+        app.handle_save_event(KeyEvent::from(KeyCode::Char('a')));
+        if let UiMode::Save { input } = &app.mode {
+            assert_eq! {input.value(), "a"};
+        } else {
+            panic!("expected Save mode");
         }
     }
 }

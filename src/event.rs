@@ -46,7 +46,7 @@ impl App {
         Ok(())
     }
 
-    fn handle_key_event(&mut self, key_event: KeyEvent) {
+    pub(crate) fn handle_key_event(&mut self, key_event: KeyEvent) {
         if self.error.is_some() {
             match key_event.code {
                 KeyCode::Enter | KeyCode::Esc => {
@@ -233,7 +233,7 @@ impl App {
         }
     }
 
-    fn handle_save_event(&mut self, key_event: KeyEvent) {
+    pub(crate) fn handle_save_event(&mut self, key_event: KeyEvent) {
         let UiMode::Save { input } = &mut self.mode else {
             return;
         };
@@ -281,5 +281,23 @@ impl App {
             }
             _ => {}
         };
+    }
+
+    pub fn handle_shutdown_error(&mut self) -> io::Result<()> {
+        if let Event::Key(key_event) = event::read()? {
+            if key_event.kind == KeyEventKind::Press {
+                match key_event.code {
+                    KeyCode::Char('r') | KeyCode::Enter => {
+                        self.retry();
+                    }
+                    KeyCode::Esc | KeyCode::Char('q') => {
+                        self.error = None;
+                        self.retry_action = None;
+                    }
+                    _ => {}
+                }
+            }
+        }
+        Ok(())
     }
 }

@@ -52,25 +52,39 @@ pub fn save_palette(palette_name: &str, palette: Vec<Color>) -> Result<(), Palet
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::color_spaces::{Color, Hex};
+    use crate::color_math::generate_palette;
+    //use crate::color_spaces::{Color, Hex};
+
+    // #[test]
+    // fn test_save_palette() {
+    //     let palette = Vec::from([
+    //         Color::new(Hex::new(0xf2d7ee).encode()),
+    //         Color::new(Hex::new(0xd3bcc0).encode()),
+    //         Color::new(Hex::new(0x69306d).encode()),
+    //         Color::new(Hex::new(0x0e103d).encode()),
+    //         Color::new(Hex::new(0xe83151).encode()),
+    //     ]);
+    //     let result_palette = match palette.into_iter().collect() {
+    //         Ok(vec) => vec,
+    //         Err(e) => panic!("{e}"),
+    //     };
+
+    //     match save_palette("test", result_palette) {
+    //         Ok(_) => return,
+    //         Err(e) => panic!("{e}"),
+    //     };
+    // }
 
     #[test]
-    fn test_save_palette() {
-        let palette = Vec::from([
-            Color::new(Hex::new(0xf2d7ee).encode()),
-            Color::new(Hex::new(0xd3bcc0).encode()),
-            Color::new(Hex::new(0x69306d).encode()),
-            Color::new(Hex::new(0x0e103d).encode()),
-            Color::new(Hex::new(0xe83151).encode()),
-        ]);
-        let result_palette = match palette.into_iter().collect() {
-            Ok(vec) => vec,
-            Err(e) => panic!("{e}"),
-        };
+    fn save_load_round_trips() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("cache");
+        let path_str = path.to_str().unwrap();
 
-        match save_palette("test", result_palette) {
-            Ok(_) => return,
-            Err(e) => panic!("{e}"),
-        };
+        let original = generate_palette(3).unwrap();
+        save_palette(path_str, original.clone()).unwrap();
+        let loaded = load_palette(path_str).unwrap();
+
+        assert_eq!(original, loaded);
     }
 }

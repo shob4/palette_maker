@@ -87,3 +87,31 @@ impl Widget for &TextInput {
             .render(area, buf);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn insert_delete_moves_cursor_correctly() {
+        let mut input = TextInput::new();
+        input.insert_char('a');
+        input.insert_char('b');
+        assert_eq!(input.value(), "ab");
+        assert_eq!(input.cursor_col(), 2);
+
+        input.move_left();
+        input.delete_char_after_cursor();
+        assert_eq!(input.value(), "a");
+    }
+
+    #[test]
+    fn handles_multibyte_chars_without_panic() {
+        let mut input = TextInput::new();
+        input.insert_char('é');
+        input.insert_char('x');
+        input.move_left();
+        input.delete_char_before_cursor();
+        assert_eq!(input.value(), "x");
+    }
+}
