@@ -169,6 +169,11 @@ impl App {
                     input: TextInput::new(),
                 };
             }
+            KeyCode::Char('o') => {
+                self.mode = UiMode::Open {
+                    input: TextInput::new(),
+                };
+            }
             // menu for copying selected color
             // a | 1 for all encodings,
             // h | 2 for hsl,
@@ -275,10 +280,13 @@ impl App {
                     Err(e) => {
                         self.error = Some(e);
                         self.retry_action = Some(RetryAction::Load(name));
+                        self.mode = UiMode::Normal;
                         return;
                     }
                 };
+                self.mode = UiMode::Normal;
             }
+            KeyCode::Esc => self.mode = UiMode::Normal,
             _ => {}
         };
     }

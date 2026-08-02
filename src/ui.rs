@@ -80,7 +80,19 @@ pub fn draw_save_popup(frame: &mut Frame, input: &TextInput) {
     frame.render_widget(block, area);
     frame.render_widget(input, inner);
 
-    frame.set_cursor_position((inner.x + input.cursor_col() + 1, inner.y));
+    frame.set_cursor_position((inner.x + input.cursor_col() + 1, inner.y + 1));
+}
+
+pub fn draw_open_popup(frame: &mut Frame, input: &TextInput) {
+    let area = centered_rect(frame.area(), 60, 9);
+    frame.render_widget(Clear, area);
+
+    let block = Block::default().borders(Borders::ALL).title(" Open ");
+    let inner = block.inner(area);
+    frame.render_widget(block, area);
+    frame.render_widget(input, inner);
+
+    frame.set_cursor_position((inner.x + input.cursor_col() + 1, inner.y + 1));
 }
 
 fn centered_rect(area: Rect, width: u16, height: u16) -> Rect {

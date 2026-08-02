@@ -149,7 +149,7 @@ pub fn generate_palette(num: usize) -> Result<Vec<Color>, PaletteError> {
     assert!(num > 0);
     let mut new_palette = Vec::with_capacity(num as usize);
     new_palette.push(generate_color()?);
-    let mut i = 1;
+    let mut i = 0;
     if i <= num {
         new_palette.push(Color::new(complement(&new_palette[0].hsl).encode())?);
         i += 1;
@@ -165,24 +165,31 @@ pub fn generate_palette(num: usize) -> Result<Vec<Color>, PaletteError> {
         };
         let index = rng.random_range(0..new_palette.len());
         match method {
-            0 => new_palette.push(Color::new(complement(&new_palette[index].hsl).encode())?),
-            1 => new_palette.push(generate_color()?),
+            0 => {
+                new_palette.push(Color::new(complement(&new_palette[index].hsl).encode())?);
+                i += 1;
+            }
+            1 => {
+                new_palette.push(generate_color()?);
+                i += 1;
+            }
             2 => {
                 let new_color = n_color_average_complement(&new_palette)?;
                 new_palette.push(new_color);
+                i += 1;
             }
             3 => {
                 let (hsl1, hsl2) = triad(&new_palette[index].hsl);
                 new_palette.push(Color::new(hsl1.encode())?);
                 new_palette.push(Color::new(hsl2.encode())?);
-                i += 1;
+                i += 2;
             }
             4 => {
                 let (hsl1, hsl2, hsl3) = square(&new_palette[index].hsl);
                 new_palette.push(Color::new(hsl1.encode())?);
                 new_palette.push(Color::new(hsl2.encode())?);
                 new_palette.push(Color::new(hsl3.encode())?);
-                i += 2;
+                i += 3;
             }
             _ => {
                 return Err(PaletteError::UntranslatableEncoding(
