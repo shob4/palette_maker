@@ -231,14 +231,14 @@ pub fn generate_palette_from_base(
                 let (hsl1, hsl2) = triad(&current_palette[index].hsl);
                 temp_palette.push(Color::new(hsl1.encode())?);
                 temp_palette.push(Color::new(hsl2.encode())?);
-                i += 1;
+                i += 2;
             }
             4 => {
                 let (hsl1, hsl2, hsl3) = square(&current_palette[index].hsl);
                 temp_palette.push(Color::new(hsl1.encode())?);
                 temp_palette.push(Color::new(hsl2.encode())?);
                 temp_palette.push(Color::new(hsl3.encode())?);
-                i += 2;
+                i += 3;
             }
             _ => {
                 return Err(PaletteError::InvalidFormat(

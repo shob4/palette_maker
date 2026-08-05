@@ -280,16 +280,17 @@ impl Encoding {
                     b.round() as u16,
                 ))
             }
+            // TODO this is horribly wrong, maybe multiplication?
             Encoding::Hsl(h, s, l) => {
                 assert!(*h <= 360);
                 assert!(*s <= 1000);
                 assert!(*l <= 1000);
                 let h = *h;
-                let old_s = *s;
-                // TODO check multiplication
-                let b = (*l as u32 + old_s as u32 * min(*l, 1000 - *l) as u32) as u16;
-                let s = if b == 0 { 0 } else { 2 * (1000 - *l / b) };
-                Ok(Encoding::Hsb(h, s, b))
+                let l = *l as u32;
+                let old_s = *s as u32;
+                let b = l + (old_s * min(l, 1000 - l)) / 1000;
+                let s = if b == 0 { 0 } else { (2000 * (b - l)) / b };
+                Ok(Encoding::Hsb(h, s as u16, b as u16))
             }
             Encoding::Name(name) => {
                 let (r, g, b) = match NAMED_COLORS.get(name.as_str()) {
@@ -551,6 +552,27 @@ mod tests {
                 Err(e) => panic!("{e}"),
             };
             assert_eq!(result, rgb);
+        }
+    }
+
+    #[test]
+    fn test_hsb() {
+        let tests: HashMap<Encoding, Hsb> = HashMap::from([
+            (Encoding::Rgb(205, 92, 92), Hsb::new(0, 551, 804)),
+            (Encoding::Hsl(0, 531, 582), Hsb::new(0, 551, 804)),
+            (
+                Encoding::Name(String::from("Indian Red")),
+                Hsb::new(0, 551, 804),
+            ),
+        ]);
+
+        for (encoding, hsb) in tests {
+            println!("input: {:?}, desired result: {:?}", encoding, hsb);
+            let result = match encoding.get_hsb() {
+                Ok(hsb) => hsb,
+                Err(e) => panic!("{e}"),
+            };
+            assert_eq!(result, hsb);
         }
     }
 }

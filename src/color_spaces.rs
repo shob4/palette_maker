@@ -1,3 +1,5 @@
+use std::fmt;
+
 use crate::{encoding::Encoding, error::PaletteError};
 
 // TODO
@@ -100,7 +102,7 @@ impl Hex {
 
 // -----------------------
 
-#[derive(Hash, Eq, Debug, Clone)]
+#[derive(Hash, Eq, Clone)]
 pub struct Color {
     pub rgb: Rgb,
     pub hsl: Hsl,
@@ -108,6 +110,27 @@ pub struct Color {
     pub hex: Hex,
     pub name: String,
     pub locked: bool,
+}
+
+impl fmt::Debug for Color {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Rgb: ({0}, {1}, {2}) | Hsl: ({3}, {4}, {5}) | Hsb: ({6}, {7}, {8}) | Hex: ({9}) | Name: ({10}) | Locked: ({11})\n",
+            self.rgb.r,
+            self.rgb.g,
+            self.rgb.b,
+            self.hsl.h,
+            self.hsl.s,
+            self.hsl.l,
+            self.hsb.h,
+            self.hsb.s,
+            self.hsb.b,
+            self.hex.h,
+            self.name,
+            self.locked
+        )
+    }
 }
 
 impl PartialEq for Color {
