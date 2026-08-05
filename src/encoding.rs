@@ -257,7 +257,7 @@ impl Encoding {
                 let c_min = min(smaller, green as i32) as f32;
                 let delta = c_max - c_min;
 
-                let h = if c_max == red {
+                let h = if c_max.round() as i32 == red.round() as i32 {
                     60.0 * ((green - blue) / delta % 6.0)
                 } else if c_max == green {
                     60.0 * ((blue - red) / delta + 2.0)
@@ -280,7 +280,6 @@ impl Encoding {
                     b.round() as u16,
                 ))
             }
-            // TODO this is horribly wrong, maybe multiplication?
             Encoding::Hsl(h, s, l) => {
                 assert!(*h <= 360);
                 assert!(*s <= 1000);
