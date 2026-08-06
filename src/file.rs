@@ -1,4 +1,4 @@
-use crate::color_spaces::{Color, Rgb};
+use crate::color_spaces::{Color, Hex, Hsb, Hsl, Rgb};
 use crate::error::PaletteError;
 use std::fs::File;
 use std::io::prelude::*;
@@ -12,21 +12,46 @@ pub fn load_palette(palette_name: &str) -> Result<Vec<Color>, PaletteError> {
     file.read_to_string(&mut contents)?;
 
     for (line_num, line) in contents.lines().enumerate() {
-        let rgb: Vec<&str> = line.split(",").collect();
+        let color: Vec<&str> = line.split(" ").collect();
 
-        if rgb.len() != 3 {
+        if color.len() != 6 {
             return Err(PaletteError::InvalidFormat(format!(
-                "Line {}: expected 3 values, got {}",
+                "Line {}: expected 6 values, got {}",
                 line_num + 1,
-                rgb.len()
+                color.len()
             )));
         }
+
+        let rgb: Vec<&str> = color[0].split(",").collect();
 
         let r: u8 = rgb[0].trim().parse()?;
         let g: u8 = rgb[1].trim().parse()?;
         let b: u8 = rgb[2].trim().parse()?;
+        let rgb = Rgb::new(r, g, b);
 
-        palette.push(Color::new(Rgb::new(r, g, b).encode())?);
+        let hsl: Vec<&str> = color[1].split(",").collect();
+
+        let h: u16 = hsl[0].trim().parse()?;
+        let s: u16 = hsl[1].trim().parse()?;
+        let l: u16 = hsl[2].trim().parse()?;
+        let hsl = Hsl::new(h, s, l);
+
+        let hsb: Vec<&str> = color[2].split(",").collect();
+
+        let h: u16 = hsb[0].trim().parse()?;
+        let s: u16 = hsb[1].trim().parse()?;
+        let b: u16 = hsb[2].trim().parse()?;
+        let hsb = Hsb::new(h, s, b);
+
+        let hex: u32 = color[3].trim().parse()?;
+        let hex = Hex::new(hex);
+
+        let name: String = color[4].trim().to_string().replace(",", " ");
+
+        let locked: bool = color[5].trim().parse()?;
+
+        let color = Color::new_raw(rgb, hsl, hsb, hex, name, locked);
+        palette.push(color);
     }
 
     if palette.len() < 1 {
@@ -41,7 +66,7 @@ pub fn load_palette(palette_name: &str) -> Result<Vec<Color>, PaletteError> {
 pub fn save_palette(palette_name: &str, palette: Vec<Color>) -> Result<(), PaletteError> {
     let mut file = File::create(palette_name)?;
     for color in palette {
-        file.write(color.rgb_to_string().as_bytes())?;
+        file.write(color.color_string().as_bytes())?;
     }
 
     Ok(())

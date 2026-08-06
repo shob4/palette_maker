@@ -25,6 +25,7 @@ pub enum RetryAction {
     Startup,
     Save(Vec<dis_color>),
     Generate(usize),
+    GenerateFrom(Vec<dis_color>, usize),
     GenerateSingle,
     Monochrome(Hsl),
     Load(String),

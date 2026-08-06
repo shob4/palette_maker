@@ -161,6 +161,17 @@ impl Color {
         })
     }
 
+    pub fn new_raw(rgb: Rgb, hsl: Hsl, hsb: Hsb, hex: Hex, name: String, locked: bool) -> Color {
+        Color {
+            rgb: rgb,
+            hsl: hsl,
+            hsb: hsb,
+            hex: hex,
+            name: name,
+            locked: locked,
+        }
+    }
+
     pub fn hex_to_string(&self) -> String {
         format!("{}\n", self.hex.h)
     }
@@ -175,6 +186,38 @@ impl Color {
 
     pub fn hsb_to_string(&self) -> String {
         format!("{},{},{}\n", self.hsb.h, self.hsb.s, self.hsb.b)
+    }
+
+    pub fn hex_to_string_no_newline(&self) -> String {
+        format!("{}", self.hex.h)
+    }
+
+    pub fn rgb_to_string_no_newline(&self) -> String {
+        format!("{},{},{}", self.rgb.r, self.rgb.g, self.rgb.b)
+    }
+
+    pub fn hsl_to_string_no_newline(&self) -> String {
+        format!("{},{},{}", self.hsl.h, self.hsl.s, self.hsl.l)
+    }
+
+    pub fn hsb_to_string_no_newline(&self) -> String {
+        format!("{},{},{}", self.hsb.h, self.hsb.s, self.hsb.b)
+    }
+
+    pub fn remove_spaces_from_name(&self) -> String {
+        self.name.replace(" ", ",")
+    }
+
+    pub fn color_string(&self) -> String {
+        format!(
+            "{} {} {} {} {} {}\n",
+            self.rgb_to_string_no_newline(),
+            self.hsl_to_string_no_newline(),
+            self.hsb_to_string_no_newline(),
+            self.hex_to_string_no_newline(),
+            self.remove_spaces_from_name(),
+            self.locked
+        )
     }
 
     pub fn ratatui_color(&self) -> ratatui::style::Color {

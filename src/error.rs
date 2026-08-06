@@ -1,4 +1,4 @@
-use std::num::ParseIntError;
+use std::{num::ParseIntError, str::ParseBoolError};
 
 #[derive(Debug, thiserror::Error)]
 pub enum PaletteError {
@@ -6,7 +6,10 @@ pub enum PaletteError {
     Io(#[from] std::io::Error),
 
     #[error("Invalid number")]
-    Parse(#[from] ParseIntError),
+    ParseInt(#[from] ParseIntError),
+
+    #[error("Invalid bool")]
+    ParseBool(#[from] ParseBoolError),
 
     #[error("Invalid palette line: {0}")]
     InvalidFormat(String),

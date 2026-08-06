@@ -1,5 +1,5 @@
 use crate::{
-    color_math::{generate_color, generate_palette, monochromatic},
+    color_math::{generate_color, generate_palette, generate_palette_from_base, monochromatic},
     color_spaces::Color as dis_color,
     error::PaletteError,
     file::{load_palette, save_palette},
@@ -105,6 +105,12 @@ impl App {
                     if let Err(e) = generate_palette(size) {
                         self.error = Some(e);
                         self.retry_action = Some(RetryAction::Generate(size));
+                    }
+                }
+                RetryAction::GenerateFrom(palette, size) => {
+                    if let Err(e) = generate_palette_from_base(&palette, size) {
+                        self.error = Some(e);
+                        self.retry_action = Some(RetryAction::GenerateFrom(palette, size));
                     }
                 }
                 RetryAction::GenerateSingle => {

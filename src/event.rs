@@ -92,7 +92,8 @@ impl App {
                         Ok(palette) => palette,
                         Err(e) => {
                             self.error = Some(e);
-                            self.retry_action = Some(RetryAction::Generate(self.colors.len() - 1));
+                            self.retry_action =
+                                Some(RetryAction::GenerateFrom(locked_colors, self.colors.len()));
                             return;
                         }
                     };
@@ -105,7 +106,7 @@ impl App {
                     self.colors = slots.into_iter().map(Option::unwrap).collect();
                     return;
                 }
-                self.colors = match generate_palette(self.colors.len() - 1) {
+                self.colors = match generate_palette(self.colors.len()) {
                     Ok(palette) => palette,
                     Err(e) => {
                         self.error = Some(e);
