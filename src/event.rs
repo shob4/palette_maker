@@ -2,7 +2,8 @@ use crate::{
     app::App,
     color_math::{generate_color, generate_palette, generate_palette_from_base, monochromatic},
     color_spaces::Color as dis_color,
-    file::{load_palette, save_palette},
+    file::{list_palette_names, load_palette, save_palette},
+    fuzzy::fuzzy_filter,
     input::TextInput,
     mode::{RetryAction, UiMode},
 };
@@ -36,7 +37,11 @@ impl App {
                 }
                 _ => {}
             }, // need to add save mode, edit mode, copy mode(?)
-            UiMode::Open { input: _ } => match event::read()? {
+            UiMode::Open {
+                input: _,
+                matches: _,
+                selected: _,
+            } => match event::read()? {
                 Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
                     self.handle_open_event(key_event)
                 }
@@ -173,6 +178,16 @@ impl App {
             KeyCode::Char('o') => {
                 self.mode = UiMode::Open {
                     input: TextInput::new(),
+                    matches: Vec::new(),
+                    selected: 0,
+                };
+                self.all_palette_names = match list_palette_names() {
+                    Ok(names) => names,
+                    Err(e) => {
+                        self.error = Some(e);
+                        self.retry_action = Some(RetryAction::List);
+                        return;
+                    }
                 };
             }
             // menu for copying selected color
@@ -264,18 +279,48 @@ impl App {
     }
 
     fn handle_open_event(&mut self, key_event: KeyEvent) {
-        let UiMode::Open { input } = &mut self.mode else {
+        let UiMode::Open {
+            input,
+            matches,
+            selected,
+        } = &mut self.mode
+        else {
             return;
         };
 
         match key_event.code {
-            KeyCode::Char(c) => input.insert_char(c),
-            KeyCode::Backspace => input.delete_char_before_cursor(),
-            KeyCode::Delete => input.delete_char_after_cursor(),
+            KeyCode::Char(c) => {
+                input.insert_char(c);
+                *matches = fuzzy_filter(&self.all_palette_names, input.value());
+                *selected = 0;
+            }
+            KeyCode::Backspace => {
+                input.delete_char_before_cursor();
+                *matches = fuzzy_filter(&self.all_palette_names, input.value());
+                *selected = 0;
+            }
+            KeyCode::Delete => {
+                input.delete_char_after_cursor();
+                *matches = fuzzy_filter(&self.all_palette_names, input.value());
+                *selected = 0;
+            }
+            KeyCode::Down => {
+                if *selected + 1 < matches.len() {
+                    *selected += 1;
+                }
+            }
+            KeyCode::Up => {
+                if *selected - 1 > 0 {
+                    *selected -= 1;
+                };
+            }
             KeyCode::Left => input.move_left(),
             KeyCode::Right => input.move_right(),
             KeyCode::Enter => {
-                let name = input.value().to_string();
+                let name = matches
+                    .get(*selected)
+                    .cloned()
+                    .unwrap_or_else(|| input.value().to_string());
                 self.colors = match load_palette(&name) {
                     Ok(palette) => palette,
                     Err(e) => {

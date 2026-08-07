@@ -2,6 +2,7 @@ use crate::color_spaces::{Color, Hex, Hsb, Hsl, Rgb};
 use crate::error::PaletteError;
 use std::fs::File;
 use std::io::prelude::*;
+use std::path::PathBuf;
 
 pub fn load_palette(palette_name: &str) -> Result<Vec<Color>, PaletteError> {
     let mut palette = Vec::new();
@@ -70,6 +71,32 @@ pub fn save_palette(palette_name: &str, palette: Vec<Color>) -> Result<(), Palet
     }
 
     Ok(())
+}
+
+pub fn palette_dir() -> Result<PathBuf, PaletteError> {
+    let project_dirs = directories::ProjectDirs::from("", "", "palette-gen")
+        .ok_or_else(|| PaletteError::Display("could not resolve data dir".into()))?;
+    let dir = project_dirs.data_dir().to_path_buf();
+    std::fs::create_dir_all(&dir)?;
+    Ok(dir)
+}
+
+pub fn list_palette_names() -> Result<Vec<String>, PaletteError> {
+    let dir = palette_dir()?;
+    let mut names = Vec::new();
+
+    for entry in std::fs::read_dir(dir)? {
+        let entry = entry?;
+        if entry.file_type()?.is_file() {
+            if let Some(name) = entry.file_name().to_str() {
+                if name != "cache" {
+                    names.push(name.to_string());
+                }
+            }
+        }
+    }
+    names.sort();
+    Ok(names)
 }
 
 // --------------------------

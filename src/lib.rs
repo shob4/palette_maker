@@ -5,6 +5,7 @@ pub mod encoding;
 pub mod error;
 pub mod event;
 pub mod file;
+pub mod fuzzy;
 pub mod input;
 pub mod mode;
 pub mod named_colors;

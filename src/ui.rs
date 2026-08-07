@@ -83,16 +83,37 @@ pub fn draw_save_popup(frame: &mut Frame, input: &TextInput) {
     frame.set_cursor_position((inner.x + input.cursor_col() + 1, inner.y + 1));
 }
 
-pub fn draw_open_popup(frame: &mut Frame, input: &TextInput) {
-    let area = centered_rect(frame.area(), 60, 9);
+pub fn draw_open_popup(frame: &mut Frame, input: &TextInput, matches: &[String], selected: usize) {
+    let area = centered_rect(frame.area(), 60, 40);
     frame.render_widget(Clear, area);
 
     let block = Block::default().borders(Borders::ALL).title(" Open ");
     let inner = block.inner(area);
     frame.render_widget(block, area);
-    frame.render_widget(input, inner);
 
-    frame.set_cursor_position((inner.x + input.cursor_col() + 1, inner.y + 1));
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Length(3), Constraint::Min(1)])
+        .split(inner);
+
+    frame.render_widget(input, chunks[0]);
+
+    frame.set_cursor_position((chunks[0].x + input.cursor_col() + 1, chunks[0].y + 1));
+
+    let lines: Vec<Line> = matches
+        .iter()
+        .enumerate()
+        .map(|(i, name)| {
+            if i == selected {
+                Line::from(name.as_str())
+                    .style(Style::default().add_modifier(ratatui::style::Modifier::REVERSED))
+            } else {
+                Line::from(name.as_str())
+            }
+        })
+        .collect();
+
+    frame.render_widget(Paragraph::new(lines), chunks[1]);
 }
 
 fn centered_rect(area: Rect, width: u16, height: u16) -> Rect {

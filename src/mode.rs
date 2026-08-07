@@ -17,6 +17,8 @@ pub enum UiMode {
     },
     Open {
         input: TextInput,
+        matches: Vec<String>,
+        selected: usize,
     },
 }
 
@@ -29,4 +31,5 @@ pub enum RetryAction {
     GenerateSingle,
     Monochrome(Hsl),
     Load(String),
+    List,
 }

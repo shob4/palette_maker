@@ -2,7 +2,7 @@ use crate::{
     color_math::{generate_color, generate_palette, generate_palette_from_base, monochromatic},
     color_spaces::Color as dis_color,
     error::PaletteError,
-    file::{load_palette, save_palette},
+    file::{list_palette_names, load_palette, save_palette},
     mode::{RetryAction, UiMode},
     ui::{draw_error_popup, draw_open_popup, draw_save_popup},
 };
@@ -19,6 +19,7 @@ pub struct App {
     pub locked: bool,
     pub num_locked: u8,
     pub mode: UiMode,
+    pub all_palette_names: Vec<String>,
 }
 
 impl App {
@@ -33,9 +34,14 @@ impl App {
             draw_save_popup(frame, input);
         }
 
-        if let UiMode::Open { input } = &self.mode {
+        if let UiMode::Open {
+            input,
+            matches,
+            selected,
+        } = &self.mode
+        {
             // find list of palettes, update with fuzzy finding
-            draw_open_popup(frame, input);
+            draw_open_popup(frame, input, matches, *selected);
         }
     }
 
@@ -129,6 +135,12 @@ impl App {
                     if let Err(e) = load_palette(&name) {
                         self.error = Some(e);
                         self.retry_action = Some(RetryAction::Load(name))
+                    }
+                }
+                RetryAction::List => {
+                    if let Err(e) = list_palette_names() {
+                        self.error = Some(e);
+                        self.retry_action = Some(RetryAction::List)
                     }
                 }
             }
